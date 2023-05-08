@@ -1,25 +1,25 @@
-import { interpret, Interpreter, spawn } from '../src/interpreter';
-import { SimulatedClock } from '../src/SimulatedClock';
-import { machine as idMachine } from './fixtures/id';
+import { from, interval } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
-  Machine,
   actions,
+  ActorRef,
+  ActorRefFrom,
+  AnyEventObject,
+  AnyState,
   assign,
+  createMachine,
+  InterpreterStatus,
+  Machine,
   send,
   sendParent,
   StateValue,
-  AnyEventObject,
-  createMachine,
-  AnyState,
-  InterpreterStatus,
-  ActorRefFrom,
-  ActorRef
 } from '../src';
+import { actionTypes, log, raise, sendTo, stop } from '../src/actions';
+import { interpret, Interpreter, spawn } from '../src/interpreter';
+import { SimulatedClock } from '../src/SimulatedClock';
 import { State } from '../src/State';
-import { log, actionTypes, raise, stop, sendTo } from '../src/actions';
 import { isObservable } from '../src/utils';
-import { interval, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { machine as idMachine } from './fixtures/id';
 
 const lightMachine = Machine({
   id: 'light',
@@ -32,22 +32,22 @@ const lightMachine = Machine({
         KEEP_GOING: {
           target: 'green',
           actions: [actions.cancel('TIMER')],
-          internal: true
-        }
-      }
+          internal: true,
+        },
+      },
     },
     yellow: {
       onEntry: [actions.send('TIMER', { delay: 10 })],
       on: {
-        TIMER: 'red'
-      }
+        TIMER: 'red',
+      },
     },
     red: {
       after: {
-        10: 'green'
-      }
-    }
-  }
+        10: 'green',
+      },
+    },
+  },
 });
 
 describe('interpreter', () => {
@@ -74,7 +74,9 @@ describe('interpreter', () => {
     it('.initialState returns the initial state', () => {
       const service = interpret(idMachine);
 
-      expect(service.initialState.value).toEqual(idMachine.initialState.value);
+      expect(service.initialState.value).toEqual(
+        idMachine.initialState.value
+      );
     });
 
     it('initial state should be cached', (done) => {
@@ -84,7 +86,7 @@ describe('interpreter', () => {
       const machine = createMachine<any, any, any>({
         initial: 'idle',
         context: {
-          actor: undefined
+          actor: undefined,
         },
         states: {
           idle: {
@@ -96,10 +98,10 @@ describe('interpreter', () => {
                     promiseSpawned++;
                   })
                 );
-              }
-            })
-          }
-        }
+              },
+            }),
+          },
+        },
       });
 
       const service = interpret(machine);
@@ -133,30 +135,30 @@ describe('interpreter', () => {
               on: {
                 TIMER: {
                   target: 'yellow',
-                  actions: 'report'
-                }
-              }
+                  actions: 'report',
+                },
+              },
             },
             yellow: {
               on: {
                 TIMER: {
-                  target: 'red'
-                }
-              }
+                  target: 'red',
+                },
+              },
             },
             red: {
               on: {
-                TIMER: 'green'
-              }
-            }
-          }
+                TIMER: 'green',
+              },
+            },
+          },
         },
         {
           actions: {
             report: () => {
               done();
-            }
-          }
+            },
+          },
         }
       );
 
@@ -176,8 +178,8 @@ describe('interpreter', () => {
     const machine = createMachine({
       initial: 'active',
       states: {
-        active: {}
-      }
+        active: {},
+      },
     });
 
     it('should notify subscribers of the current state upon subscription (subscribe)', (done) => {
@@ -204,7 +206,7 @@ describe('interpreter', () => {
       let state: any;
 
       const service = interpret(lightMachine, {
-        clock: new SimulatedClock()
+        clock: new SimulatedClock(),
       })
         .onTransition((s) => {
           state = s;
@@ -222,7 +224,7 @@ describe('interpreter', () => {
       const currentStates: Array<AnyState> = [];
 
       const service = interpret(lightMachine, {
-        clock: new SimulatedClock()
+        clock: new SimulatedClock(),
       }).onTransition((state) => {
         currentStates.push(state);
 
@@ -231,7 +233,7 @@ describe('interpreter', () => {
             'green',
             'yellow',
             'red',
-            'green'
+            'green',
           ]);
         }
       });
@@ -242,23 +244,15 @@ describe('interpreter', () => {
       expect(currentStates[0]!.value).toEqual('green');
 
       clock.increment(5);
-      expect(currentStates.map((s) => s.value)).toEqual(['green', 'yellow']);
-
-      clock.increment(5);
-      expect(currentStates.map((s) => s.value)).toEqual(['green', 'yellow']);
-
-      clock.increment(5);
       expect(currentStates.map((s) => s.value)).toEqual([
         'green',
         'yellow',
-        'red'
       ]);
 
       clock.increment(5);
       expect(currentStates.map((s) => s.value)).toEqual([
         'green',
         'yellow',
-        'red'
       ]);
 
       clock.increment(5);
@@ -266,7 +260,21 @@ describe('interpreter', () => {
         'green',
         'yellow',
         'red',
-        'green'
+      ]);
+
+      clock.increment(5);
+      expect(currentStates.map((s) => s.value)).toEqual([
+        'green',
+        'yellow',
+        'red',
+      ]);
+
+      clock.increment(5);
+      expect(currentStates.map((s) => s.value)).toEqual([
+        'green',
+        'yellow',
+        'red',
+        'green',
       ]);
     });
 
@@ -285,30 +293,34 @@ describe('interpreter', () => {
       >({
         id: 'delayExpr',
         context: {
-          initialDelay: 100
+          initialDelay: 100,
         },
         initial: 'idle',
         states: {
           idle: {
             on: {
-              ACTIVATE: 'pending'
-            }
+              ACTIVATE: 'pending',
+            },
           },
           pending: {
             onEntry: send('FINISH', {
               delay: (ctx, e) =>
                 ctx.initialDelay +
                 ('wait' in e
-                  ? (e as Extract<DelayExpMachineEvents, { type: 'ACTIVATE' }>)
-                      .wait
-                  : 0)
+                  ? (
+                      e as Extract<
+                        DelayExpMachineEvents,
+                        { type: 'ACTIVATE' }
+                      >
+                    ).wait
+                  : 0),
             }),
             on: {
-              FINISH: 'finished'
-            }
+              FINISH: 'finished',
+            },
           },
-          finished: { type: 'final' }
-        }
+          finished: { type: 'final' },
+        },
       });
 
       let stopped = false;
@@ -316,7 +328,7 @@ describe('interpreter', () => {
       const clock = new SimulatedClock();
 
       const delayExprService = interpret(delayExprMachine, {
-        clock
+        clock,
       })
         .onDone(() => {
           stopped = true;
@@ -325,7 +337,7 @@ describe('interpreter', () => {
 
       delayExprService.send({
         type: 'ACTIVATE',
-        wait: 50
+        wait: 50,
       });
 
       clock.increment(101);
@@ -357,14 +369,14 @@ describe('interpreter', () => {
       >({
         id: 'delayExpr',
         context: {
-          initialDelay: 100
+          initialDelay: 100,
         },
         initial: 'idle',
         states: {
           idle: {
             on: {
-              ACTIVATE: 'pending'
-            }
+              ACTIVATE: 'pending',
+            },
           },
           pending: {
             onEntry: send('FINISH', {
@@ -375,16 +387,16 @@ describe('interpreter', () => {
                     DelayExpMachineEvents,
                     { type: 'ACTIVATE' }
                   >
-                ).wait
+                ).wait,
             }),
             on: {
-              FINISH: 'finished'
-            }
+              FINISH: 'finished',
+            },
           },
           finished: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       let stopped = false;
@@ -392,7 +404,7 @@ describe('interpreter', () => {
       const clock = new SimulatedClock();
 
       const delayExprService = interpret(delayExprMachine, {
-        clock
+        clock,
       })
         .onDone(() => {
           stopped = true;
@@ -401,7 +413,7 @@ describe('interpreter', () => {
 
       delayExprService.send({
         type: 'ACTIVATE',
-        wait: 50
+        wait: 50,
       });
 
       clock.increment(101);
@@ -419,7 +431,7 @@ describe('interpreter', () => {
         {
           id: 'letter',
           context: {
-            delay: 100
+            delay: 100,
           },
           initial: 'a',
           states: {
@@ -427,48 +439,51 @@ describe('interpreter', () => {
               after: [
                 {
                   delay: (ctx) => ctx.delay,
-                  target: 'b'
-                }
-              ]
+                  target: 'b',
+                },
+              ],
             },
             b: {
               after: {
-                someDelay: 'c'
-              }
+                someDelay: 'c',
+              },
             },
             c: {
-              onEntry: send({ type: 'FIRE_DELAY', value: 200 }, { delay: 20 }),
+              onEntry: send(
+                { type: 'FIRE_DELAY', value: 200 },
+                { delay: 20 }
+              ),
               on: {
-                FIRE_DELAY: 'd'
-              }
+                FIRE_DELAY: 'd',
+              },
             },
             d: {
               after: [
                 {
                   delay: (ctx, e) => ctx.delay + (e as any).value,
-                  target: 'e'
-                }
-              ]
+                  target: 'e',
+                },
+              ],
             },
             e: {
               after: [
                 {
                   delay: 'someDelay',
-                  target: 'f'
-                }
-              ]
+                  target: 'f',
+                },
+              ],
             },
             f: {
-              type: 'final'
-            }
-          }
+              type: 'final',
+            },
+          },
         },
         {
           delays: {
             someDelay: (ctx) => {
               return ctx.delay + 50;
-            }
-          }
+            },
+          },
         }
       );
 
@@ -507,19 +522,19 @@ describe('interpreter', () => {
           on: {
             activities: 'myActivity',
             on: {
-              TURN_OFF: 'off'
-            }
+              TURN_OFF: 'off',
+            },
           },
-          off: {}
-        }
+          off: {},
+        },
       },
       {
         activities: {
           myActivity: () => {
             activityState = 'on';
             return () => (activityState = 'off');
-          }
-        }
+          },
+        },
       }
     );
 
@@ -554,19 +569,19 @@ describe('interpreter', () => {
             on: {
               activities: 'myActivity',
               on: {
-                TURN_OFF: 'off'
-              }
+                TURN_OFF: 'off',
+              },
             },
-            off: {}
-          }
+            off: {},
+          },
         },
         {
           activities: {
             myActivity: () => {
               stopActivityState = 'on';
               return () => (stopActivityState = 'off');
-            }
-          }
+            },
+          },
         }
       );
 
@@ -588,7 +603,7 @@ describe('interpreter', () => {
           initial: 'inactive',
           states: {
             inactive: {
-              on: { TOGGLE: 'active' }
+              on: { TOGGLE: 'active' },
             },
             active: {
               activities: 'blink',
@@ -596,10 +611,10 @@ describe('interpreter', () => {
               initial: 'A',
               states: {
                 A: { on: { SWITCH: 'B' } },
-                B: { on: { SWITCH: 'A' } }
-              }
-            }
-          }
+                B: { on: { SWITCH: 'A' } },
+              },
+            },
+          },
         },
         {
           activities: {
@@ -609,8 +624,8 @@ describe('interpreter', () => {
               return () => {
                 activityActive = false;
               };
-            }
-          }
+            },
+          },
         }
       );
 
@@ -635,7 +650,7 @@ describe('interpreter', () => {
     let currentState: AnyState;
 
     const service = interpret(lightMachine, {
-      clock: new SimulatedClock()
+      clock: new SimulatedClock(),
     }).onTransition((state) => (currentState = state));
     const clock = service.clock as SimulatedClock;
     service.start();
@@ -651,7 +666,7 @@ describe('interpreter', () => {
   it('should throw an error if an event is sent to an uninitialized interpreter if { deferEvents: false }', () => {
     const service = interpret(lightMachine, {
       clock: new SimulatedClock(),
-      deferEvents: false
+      deferEvents: false,
     });
 
     expect(() => service.send('SOME_EVENT'))
@@ -668,7 +683,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
   it('should not throw an error if an event is sent to an uninitialized interpreter if { deferEvents: true }', () => {
     const service = interpret(lightMachine, {
       clock: new SimulatedClock(),
-      deferEvents: true
+      deferEvents: true,
     });
 
     expect(() => service.send('SOME_EVENT')).not.toThrow();
@@ -680,7 +695,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
 
   it('should not throw an error if an event is sent to an uninitialized interpreter (default options)', () => {
     const service = interpret(lightMachine, {
-      clock: new SimulatedClock()
+      clock: new SimulatedClock(),
     });
 
     expect(() => service.send('SOME_EVENT')).not.toThrow();
@@ -696,15 +711,15 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       initial: 'a',
       states: {
         a: {
-          on: { NEXT_A: 'b' }
+          on: { NEXT_A: 'b' },
         },
         b: {
-          on: { NEXT_B: 'c' }
+          on: { NEXT_B: 'c' },
         },
         c: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     let state: any;
@@ -734,14 +749,14 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           states: {
             idle: {
               on: {
-                FETCH: 'pending'
-              }
+                FETCH: 'pending',
+              },
             },
-            pending: {}
-          }
-        }
-      }
-    };
+            pending: {},
+          },
+        },
+      },
+    } as any;
 
     expect(() => {
       interpret(Machine(invalidMachine)).start();
@@ -753,7 +768,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
   it('should not update when stopped', () => {
     let state = lightMachine.initialState;
     const service = interpret(lightMachine, {
-      clock: new SimulatedClock()
+      clock: new SimulatedClock(),
     }).onTransition((s) => (state = s));
 
     service.start();
@@ -781,16 +796,16 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
             LOG: {
               actions: [
                 assign({ count: (ctx) => ctx.count + 1 }),
-                log((ctx) => ctx)
-              ]
-            }
-          }
-        }
-      }
+                log((ctx) => ctx),
+              ],
+            },
+          },
+        },
+      },
     });
 
     const service = interpret(logMachine, {
-      logger: (msg) => logs.push(msg)
+      logger: (msg) => logs.push(msg),
     }).start();
 
     service.send('LOG');
@@ -804,19 +819,19 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
     const logs: any[] = [];
     const logAction = log((_ctx, event, meta) => ({
       event: event.type,
-      origin: meta._event.origin
+      origin: meta._event.origin,
     }));
 
     const childMachine = Machine({
       initial: 'bar',
       states: {
-        bar: {}
+        bar: {},
       },
       on: {
         PING: {
-          actions: [actions.respond('PONG')]
-        }
-      }
+          actions: [actions.respond('PONG')],
+        },
+      },
     });
 
     const parentMachine = Machine({
@@ -825,22 +840,22 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         foo: {
           invoke: {
             id: 'child',
-            src: childMachine
-          }
-        }
+            src: childMachine,
+          },
+        },
       },
       on: {
         PING_CHILD: {
-          actions: [sendTo('child', 'PING'), logAction]
+          actions: [sendTo('child', 'PING'), logAction],
         },
         '*': {
-          actions: [logAction]
-        }
-      }
+          actions: [logAction],
+        },
+      },
     });
 
     const service = interpret(parentMachine, {
-      logger: (msg) => logs.push(msg)
+      logger: (msg) => logs.push(msg),
     }).start();
 
     service.send('PING_CHILD');
@@ -851,7 +866,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       { event: 'PING_CHILD', origin: undefined },
       { event: 'PONG', origin: expect.stringMatching(/.+/) },
       { event: 'PING_CHILD', origin: undefined },
-      { event: 'PONG', origin: expect.stringMatching(/.+/) }
+      { event: 'PONG', origin: expect.stringMatching(/.+/) },
     ]);
   });
 
@@ -865,20 +880,20 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         foo: {
           on: {
             EXTERNAL_EVENT: {
-              actions: [raise('RAISED_EVENT'), logAction]
-            }
-          }
-        }
+              actions: [raise('RAISED_EVENT'), logAction],
+            },
+          },
+        },
       },
       on: {
         '*': {
-          actions: [logAction]
-        }
-      }
+          actions: [logAction],
+        },
+      },
     });
 
     const service = interpret(parentMachine, {
-      logger: (msg) => logs.push(msg)
+      logger: (msg) => logs.push(msg),
     }).start();
 
     service.send('EXTERNAL_EVENT');
@@ -899,7 +914,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       id: 'sendexpr',
       initial: 'start',
       context: {
-        password: 'foo'
+        password: 'foo',
       },
       states: {
         start: {
@@ -907,14 +922,14 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           on: {
             NEXT: {
               target: 'finish',
-              cond: (_, e) => e.password === 'foo'
-            }
-          }
+              cond: (_, e) => e.password === 'foo',
+            },
+          },
         },
         finish: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     it('should resolve send event expressions', (done) => {
@@ -928,19 +943,22 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         initial: 'foo',
         states: {
           foo: {
-            entry: [send('EVENT_2'), send('EVENT_1', { to: '#_internal' })],
+            entry: [
+              send('EVENT_2'),
+              send('EVENT_1', { to: '#_internal' }),
+            ],
             on: {
               EVENT_1: 'pass',
-              EVENT_2: 'fail'
-            }
+              EVENT_2: 'fail',
+            },
           },
           pass: {
-            type: 'final'
+            type: 'final',
           },
           fail: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       let state: AnyState;
@@ -968,16 +986,16 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       id: 'child',
       initial: 'start',
       context: {
-        password: 'unknown'
+        password: 'unknown',
       },
       states: {
         start: {
           onEntry: sendParent((ctx) => ({
             type: 'NEXT',
-            password: ctx.password
-          }))
-        }
-      }
+            password: ctx.password,
+          })),
+        },
+      },
     });
     // Ctx, any, Events, any
     const parentMachine = createMachine<Ctx, Events>({
@@ -989,20 +1007,20 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
             id: 'child',
             src: childMachine,
             data: {
-              password: 'foo'
-            }
+              password: 'foo',
+            },
           },
           on: {
             NEXT: {
               target: 'finish',
-              cond: (_, e) => e.password === 'foo'
-            }
-          }
+              cond: (_, e) => e.password === 'foo',
+            },
+          },
         },
         finish: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     it('should resolve sendParent event expressions', (done) => {
@@ -1026,13 +1044,13 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       states: {
         even: {
           exit: [assign({ count: (ctx) => ctx.count + 1 }), 'evenAction'],
-          on: { INC: 'odd' }
+          on: { INC: 'odd' },
         },
         odd: {
           exit: [assign({ count: (ctx) => ctx.count + 1 }), 'oddAction'],
-          on: { INC: 'even' }
-        }
-      }
+          on: { INC: 'even' },
+        },
+      },
     });
 
     const countMachineNoActions = Machine<{ count: number }>({
@@ -1041,12 +1059,12 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       context: { count: 0 },
       states: {
         even: {
-          on: { ODD: 'odd' }
+          on: { ODD: 'odd' },
         },
         odd: {
-          on: { EVEN: 'even' }
-        }
-      }
+          on: { EVEN: 'even' },
+        },
+      },
     });
 
     it('should batch send events', (done) => {
@@ -1061,8 +1079,8 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
             },
             oddAction: (ctx) => {
               oddCounts.push(ctx.count);
-            }
-          }
+            },
+          },
         })
       )
         .onTransition((state) => {
@@ -1081,7 +1099,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
                 'evenAction',
                 'oddAction',
                 'evenAction',
-                'oddAction'
+                'oddAction',
               ]);
 
               expect(evenCounts).toEqual([1, 3]);
@@ -1172,15 +1190,15 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           on: {
             EVENT: {
               target: 'active',
-              cond: (_: any, e: any) => e.id === 42 // TODO: fix unknown event type
+              cond: (_: any, e: any) => e.id === 42, // TODO: fix unknown event type
             },
-            ACTIVATE: 'active'
-          }
+            ACTIVATE: 'active',
+          },
         },
         active: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     it('can send events with a string', (done) => {
@@ -1231,18 +1249,18 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           inactive: {
             on: {
               INACTIVATE: 'fail',
-              ACTIVATE: 'active'
-            }
+              ACTIVATE: 'active',
+            },
           },
           active: {
             on: {
-              INACTIVATE: 'success'
-            }
+              INACTIVATE: 'success',
+            },
           },
           success: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       const toggleService = interpret(toggleMachine)
@@ -1264,11 +1282,11 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         foo: {
           initial: 'one',
           states: {
-            one: {}
-          }
+            one: {},
+          },
         },
-        bar: {}
-      }
+        bar: {},
+      },
     });
 
     it('should initialize the service', (done) => {
@@ -1299,28 +1317,34 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
     });
 
     it('should be able to be initialized at a custom state', (done) => {
-      const startService = interpret(startMachine).onTransition((state) => {
-        expect(state.matches('bar')).toBeTruthy();
-        done();
-      });
+      const startService = interpret(startMachine).onTransition(
+        (state) => {
+          expect(state.matches('bar')).toBeTruthy();
+          done();
+        }
+      );
 
       startService.start(State.from('bar'));
     });
 
     it('should be able to be initialized at a custom state value', (done) => {
-      const startService = interpret(startMachine).onTransition((state) => {
-        expect(state.matches('bar')).toBeTruthy();
-        done();
-      });
+      const startService = interpret(startMachine).onTransition(
+        (state) => {
+          expect(state.matches('bar')).toBeTruthy();
+          done();
+        }
+      );
 
       startService.start('bar');
     });
 
     it('should be able to resolve a custom initialized state', (done) => {
-      const startService = interpret(startMachine).onTransition((state) => {
-        expect(state.matches({ foo: 'one' })).toBeTruthy();
-        done();
-      });
+      const startService = interpret(startMachine).onTransition(
+        (state) => {
+          expect(state.matches({ foo: 'one' })).toBeTruthy();
+          done();
+        }
+      );
 
       startService.start(State.from('foo'));
     });
@@ -1339,12 +1363,12 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
                 target: 'bar',
                 actions: () => {
                   called = true;
-                }
-              }
-            }
+                },
+              },
+            },
           },
-          bar: {}
-        }
+          bar: {},
+        },
       });
 
       const delayedService = interpret(delayedMachine).start();
@@ -1365,15 +1389,15 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         states: {
           waiting: {
             on: {
-              TRIGGER: 'active'
-            }
+              TRIGGER: 'active',
+            },
           },
           active: {
             entry: () => {
               called = true;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const service = interpret(testMachine).start();
@@ -1392,7 +1416,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       const service = interpret(
         createMachine({
           initial: 'a',
-          states: { a: {} }
+          states: { a: {} },
         })
       );
 
@@ -1409,12 +1433,12 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         initial: 'inactive',
         states: {
           inactive: {
-            on: { TOGGLE: 'active' }
+            on: { TOGGLE: 'active' },
           },
           active: {
-            on: { TOGGLE: 'inactive' }
-          }
-        }
+            on: { TOGGLE: 'inactive' },
+          },
+        },
       });
 
       const toggleService = interpret(toggleMachine).start();
@@ -1455,9 +1479,9 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
               type: 'final',
               onEntry: () => {
                 effect = true;
-              }
-            }
-          }
+              },
+            },
+          },
         });
 
         interpret(machine, { execute: false })
@@ -1479,9 +1503,9 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
               type: 'final',
               onEntry: () => {
                 effect = true;
-              }
-            }
-          }
+              },
+            },
+          },
         });
 
         interpret(machine, { execute: true })
@@ -1499,16 +1523,16 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           id: 'noExecute',
           initial: 'active',
           context: {
-            value: true
+            value: true,
           },
           states: {
             active: {
               type: 'final',
               onEntry: (ctx) => {
                 effect = ctx.value;
-              }
-            }
-          }
+              },
+            },
+          },
         });
 
         const service = interpret(machine, { execute: false })
@@ -1532,14 +1556,14 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           id: 'noExecute',
           initial: 'active',
           context: {
-            value: true
+            value: true,
           },
           states: {
             active: {
               type: 'final',
-              onEntry: 'doEffect'
-            }
-          }
+              onEntry: 'doEffect',
+            },
+          },
         });
 
         const service = interpret(machine, { execute: false })
@@ -1548,7 +1572,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
               service.execute(state, {
                 doEffect: (ctx) => {
                   effect = ctx.value;
-                }
+                },
               });
               expect(effect).toBe(true);
               done();
@@ -1593,8 +1617,8 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           idle: { on: { START: 'transient' } },
           transient: { always: 'next' },
           next: { on: { FINISH: 'end' } },
-          end: { type: 'final' }
-        }
+          end: { type: 'final' },
+        },
       });
 
       const stateValues: StateValue[] = [];
@@ -1620,17 +1644,17 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
             transient: {
               always: [
                 { target: 'end', cond: 'alwaysFalse' },
-                { target: 'next' }
-              ]
+                { target: 'next' },
+              ],
             },
             next: { on: { FINISH: 'end' } },
-            end: { type: 'final' }
-          }
+            end: { type: 'final' },
+          },
         },
         {
           guards: {
-            alwaysFalse: () => false
-          }
+            alwaysFalse: () => false,
+          },
         }
       );
 
@@ -1659,18 +1683,18 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           after: {
             10: {
               target: 'active',
-              actions: assign({ count: (ctx) => ctx.count + 1 })
-            }
+              actions: assign({ count: (ctx) => ctx.count + 1 }),
+            },
           },
           always: {
             target: 'finished',
-            cond: (ctx) => ctx.count >= 5
-          }
+            cond: (ctx) => ctx.count >= 5,
+          },
         },
         finished: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     it('should be subscribable', (done) => {
@@ -1718,18 +1742,18 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           active: {
             always: {
               target: 'finished',
-              cond: (ctx) => ctx.count >= 5
+              cond: (ctx) => ctx.count >= 5,
             },
             on: {
               INC: {
-                actions: assign({ count: (ctx) => ctx.count + 1 })
-              }
-            }
+                actions: assign({ count: (ctx) => ctx.count + 1 }),
+              },
+            },
           },
           finished: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       let count: number;
@@ -1761,16 +1785,16 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           states: {
             idle: {
               on: {
-                NEXT: 'done'
-              }
+                NEXT: 'done',
+              },
             },
-            done: { type: 'final' }
-          }
+            done: { type: 'final' },
+          },
         })
       ).start();
 
       service.subscribe({
-        complete: completeCb
+        complete: completeCb,
       });
 
       service.send({ type: 'NEXT' });
@@ -1784,7 +1808,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       const service = interpret(createMachine({})).start();
 
       service.subscribe({
-        complete: completeCb
+        complete: completeCb,
       });
 
       service.stop();
@@ -1801,17 +1825,17 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           states: {
             initial: {
               invoke: {
-                src: 'testService'
-              }
-            }
-          }
+                src: 'testService',
+              },
+            },
+          },
         },
         {
           services: {
             testService: (() => {
               return void 0;
-            }) as any
-          }
+            }) as any,
+          },
         }
       );
 
@@ -1828,11 +1852,11 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           active: {
             on: {
               FIRE: {
-                actions: sendParent('FIRED')
-              }
-            }
-          }
-        }
+                actions: sendParent('FIRED'),
+              },
+            },
+          },
+        },
       });
 
       const parentMachine = Machine({
@@ -1841,16 +1865,16 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
           active: {
             invoke: {
               id: 'childActor',
-              src: childMachine
+              src: childMachine,
             },
             on: {
-              FIRED: 'success'
-            }
+              FIRED: 'success',
+            },
           },
           success: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       const service = interpret(parentMachine)
@@ -1882,14 +1906,14 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
                 }),
               onDone: {
                 target: 'success',
-                cond: (_, e) => e.data === 42
-              }
-            }
+                cond: (_, e) => e.data === 42,
+              },
+            },
           },
           success: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       let subscribed = false;
@@ -1921,21 +1945,21 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
             invoke: {
               id: 'childActor',
               src: () =>
-                interval$.pipe(map((value) => ({ type: 'FIRED', value })))
+                interval$.pipe(map((value) => ({ type: 'FIRED', value }))),
             },
             on: {
               FIRED: {
                 target: 'success',
                 cond: (_: unknown, e: AnyEventObject) => {
                   return e.value === 3;
-                }
-              }
-            }
+                },
+              },
+            },
           },
           success: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       let subscribed = false;
@@ -1966,8 +1990,8 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       const childMachine = Machine({
         initial: 'idle',
         states: {
-          idle: {}
-        }
+          idle: {},
+        },
       });
 
       const formMachine = createMachine<any, any, any>({
@@ -1975,11 +1999,11 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         initial: 'idle',
         context: {},
         entry: assign({
-          firstNameRef: () => spawn(childMachine, 'child')
+          firstNameRef: () => spawn(childMachine, 'child'),
         }),
         states: {
-          idle: {}
-        }
+          idle: {},
+        },
       });
 
       interpret(formMachine)
@@ -1994,8 +2018,8 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
       const childMachine = Machine({
         initial: 'idle',
         states: {
-          idle: {}
-        }
+          idle: {},
+        },
       });
 
       const parentMachine = createMachine({
@@ -2015,7 +2039,7 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
               }),
               'promiseChild'
             ),
-          observableRef: () => spawn(interval(1000), 'observableChild')
+          observableRef: () => spawn(interval(1000), 'observableChild'),
         }),
         states: {
           present: {
@@ -2025,15 +2049,15 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
                 actions: [
                   stop((ctx) => ctx.machineRef),
                   stop((ctx) => ctx.promiseRef),
-                  stop((ctx) => ctx.observableRef)
-                ]
-              }
-            }
+                  stop((ctx) => ctx.observableRef),
+                ],
+              },
+            },
           },
           gone: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       const service = interpret(parentMachine)
@@ -2063,9 +2087,9 @@ Event: {\\"type\\":\\"SOME_EVENT\\"}"
         initial: 'a',
         states: {
           a: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       const service = interpret(machine).start();

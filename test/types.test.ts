@@ -1,14 +1,14 @@
 import { from } from 'rxjs';
+import { log, raise, stop } from '../src/actions';
 import {
+  ActorRefFrom,
   Machine,
+  StateMachine,
   assign,
   createMachine,
   interpret,
-  StateMachine,
   spawn,
-  ActorRefFrom
 } from '../src/index';
-import { raise, stop, log } from '../src/actions';
 import { createModel } from '../src/model';
 
 function noop(_x: unknown) {
@@ -44,55 +44,60 @@ describe('StateSchema', () => {
     elapsed: number;
   }
 
-  const lightMachine = Machine<LightContext, LightStateSchema, LightEvent>({
-    key: 'light',
-    initial: 'green',
-    meta: { interval: 1000 },
-    context: { elapsed: 0 },
-    states: {
-      green: {
-        id: 'green',
-        meta: { name: 'greenLight' },
-        on: {
-          TIMER: 'yellow',
-          POWER_OUTAGE: 'red'
-        }
-      },
-      yellow: {
-        on: {
-          TIMER: 'red',
-          POWER_OUTAGE: 'red'
-        }
-      },
-      red: {
-        on: {
-          TIMER: 'green',
-          POWER_OUTAGE: 'red'
+  const lightMachine = Machine<LightContext, LightStateSchema, LightEvent>(
+    {
+      key: 'light',
+      initial: 'green',
+      meta: { interval: 1000 },
+      context: { elapsed: 0 },
+      states: {
+        green: {
+          id: 'green',
+          meta: { name: 'greenLight' },
+          on: {
+            TIMER: 'yellow',
+            POWER_OUTAGE: 'red',
+          },
         },
-        initial: 'walk',
-        states: {
-          walk: {
-            on: {
-              PED_COUNTDOWN: 'wait'
-            }
+        yellow: {
+          on: {
+            TIMER: 'red',
+            POWER_OUTAGE: 'red',
           },
-          wait: {
-            on: {
-              PED_COUNTDOWN: {
-                target: 'stop',
-                cond: (ctx, e: { type: 'PED_COUNTDOWN'; duration: number }) => {
-                  return e.duration === 0 && ctx.elapsed > 0;
-                }
-              }
-            }
+        },
+        red: {
+          on: {
+            TIMER: 'green',
+            POWER_OUTAGE: 'red',
           },
-          stop: {
-            always: { target: '#green' }
-          }
-        }
-      }
+          initial: 'walk',
+          states: {
+            walk: {
+              on: {
+                PED_COUNTDOWN: 'wait',
+              },
+            },
+            wait: {
+              on: {
+                PED_COUNTDOWN: {
+                  target: 'stop',
+                  cond: (
+                    ctx,
+                    e: { type: 'PED_COUNTDOWN'; duration: number }
+                  ) => {
+                    return e.duration === 0 && ctx.elapsed > 0;
+                  },
+                },
+              },
+            },
+            stop: {
+              always: { target: '#green' },
+            },
+          },
+        },
+      },
     }
-  });
+  );
 
   noop(lightMachine);
 
@@ -138,10 +143,10 @@ describe('Parallel StateSchema', () => {
         initial: 'one',
         states: {
           one: { on: { E: 'two' } },
-          two: {}
-        }
-      }
-    }
+          two: {},
+        },
+      },
+    },
   });
 
   noop(parallelMachine);
@@ -192,15 +197,15 @@ describe('Nested parallel stateSchema', () => {
               'UPDATE.CONTEXT': {
                 actions: [
                   assign({
-                    lastDate: new Date()
-                  })
-                ]
-              }
-            }
-          }
-        }
-      }
-    }
+                    lastDate: new Date(),
+                  }),
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   noop(nestedParallelMachine);
@@ -218,7 +223,7 @@ describe('Raise events', () => {
     type Events = { type: 'FOO' } | { type: 'BAR' };
 
     createMachine<Context, Events>({
-      entry: raise('FOO')
+      entry: raise('FOO'),
     });
   });
 
@@ -230,7 +235,7 @@ describe('Raise events', () => {
 
     createMachine<Context, Events>({
       // @ts-expect-error
-      entry: raise('UNKNOWN')
+      entry: raise('UNKNOWN'),
     });
   });
 
@@ -241,8 +246,8 @@ describe('Raise events', () => {
 
     createMachine<Context, Events>({
       entry: raise({
-        type: 'FOO'
-      })
+        type: 'FOO',
+      }),
     });
   });
 
@@ -254,8 +259,8 @@ describe('Raise events', () => {
     createMachine<Context, Events>({
       entry: raise({
         // @ts-expect-error
-        type: 'UNKNOWN'
-      })
+        type: 'UNKNOWN',
+      }),
     });
   });
 
@@ -267,7 +272,7 @@ describe('Raise events', () => {
     createMachine<Context, Events>({
       schema: {
         context: {} as { counter: number },
-        events: {} as { type: 'FOO' } | { type: 'BAR' }
+        events: {} as { type: 'FOO' } | { type: 'BAR' },
       },
       on: {
         FOO: {
@@ -277,11 +282,11 @@ describe('Raise events', () => {
             ((_arg: 'BAR') => {})(ev.type);
 
             return {
-              type: 'BAR'
+              type: 'BAR',
             };
-          })
-        }
-      }
+          }),
+        },
+      },
     });
   });
 
@@ -293,11 +298,11 @@ describe('Raise events', () => {
     createMachine<Context, Events>({
       schema: {
         context: {} as { counter: number },
-        events: {} as { type: 'FOO' } | { type: 'BAR' }
+        events: {} as { type: 'FOO' } | { type: 'BAR' },
       },
       entry: raise(() => ({
-        type: 'BAR'
-      }))
+        type: 'BAR',
+      })),
     });
   });
 
@@ -309,12 +314,12 @@ describe('Raise events', () => {
     createMachine<Context, Events>({
       schema: {
         context: {} as { counter: number },
-        events: {} as { type: 'FOO' } | { type: 'BAR' }
+        events: {} as { type: 'FOO' } | { type: 'BAR' },
       },
       // @ts-expect-error
       entry: raise(() => ({
-        type: 'UNKNOWN'
-      }))
+        type: 'UNKNOWN',
+      })),
     });
   });
 });
@@ -323,7 +328,7 @@ describe('log', () => {
   it('should narrow down the event type in the expression', () => {
     createMachine({
       schema: {
-        events: {} as { type: 'FOO' } | { type: 'BAR' }
+        events: {} as { type: 'FOO' } | { type: 'BAR' },
       },
       on: {
         FOO: {
@@ -331,9 +336,9 @@ describe('log', () => {
             ((_arg: 'FOO') => {})(ev.type);
             // @ts-expect-error
             ((_arg: 'BAR') => {})(ev.type);
-          })
-        }
-      }
+          }),
+        },
+      },
     });
   });
 });
@@ -342,7 +347,7 @@ describe('stop', () => {
   it('should narrow down the event type in the expression', () => {
     createMachine({
       schema: {
-        events: {} as { type: 'FOO' } | { type: 'BAR' }
+        events: {} as { type: 'FOO' } | { type: 'BAR' },
       },
       on: {
         FOO: {
@@ -352,9 +357,9 @@ describe('stop', () => {
             ((_arg: 'BAR') => {})(ev.type);
 
             return 'fakeId';
-          })
-        }
-      }
+          }),
+        },
+      },
     });
   });
 });
@@ -369,23 +374,23 @@ describe('Typestates', () => {
     initial: 'idle',
     context: {
       result: none as None | number,
-      error: none as None | string
+      error: none as None | string,
     },
     states: {
       idle: {
-        on: { RUN: 'running' }
+        on: { RUN: 'running' },
       },
       running: {
         invoke: {
           id: 'task-1',
           src: 'taskService',
           onDone: { target: 'succeeded', actions: 'assignSuccess' },
-          onError: { target: 'failed', actions: 'assignFailure' }
-        }
+          onError: { target: 'failed', actions: 'assignFailure' },
+        },
       },
       succeeded: {},
-      failed: {}
-    }
+      failed: {},
+    },
   };
 
   type TaskContext = typeof taskMachineConfiguration.context;
@@ -466,8 +471,8 @@ describe('context', () => {
     createMachine(
       {
         context: {
-          foo: 'test'
-        }
+          foo: 'test',
+        },
       },
       {
         actions: {
@@ -475,8 +480,8 @@ describe('context', () => {
             ((_accept: string) => {})(ctx.foo);
             // @ts-expect-error
             ((_accept: number) => {})(ctx.foo);
-          }
-        }
+          },
+        },
       }
     );
   });
@@ -487,9 +492,9 @@ describe('context', () => {
         schema: {
           context: {} as {
             count: number;
-          }
+          },
         },
-        entry: (_ctx: any) => {}
+        entry: (_ctx: any) => {},
       },
       {
         actions: {
@@ -497,8 +502,8 @@ describe('context', () => {
             ((_accept: number) => {})(ctx.count);
             // @ts-expect-error
             ((_accept: string) => {})(ctx.count);
-          }
-        }
+          },
+        },
       }
     );
   });
@@ -518,12 +523,12 @@ describe('context', () => {
       schema: {
         context: {} as {
           literalTest: 'foo' | 'bar';
-        }
+        },
       },
       context: {
         // @ts-expect-error
-        literalTest: 'anything'
-      }
+        literalTest: 'anything',
+      },
     });
   });
 });
@@ -534,9 +539,9 @@ describe('events', () => {
       schema: {
         events: {} as {
           type: 'FOO';
-        }
+        },
       },
-      entry: raise<any, any, any>('FOO')
+      entry: raise<any, any, any>('FOO'),
     });
 
     const service = interpret(machine).start();
@@ -551,9 +556,9 @@ describe('events', () => {
       schema: {
         events: {} as {
           type: 'FOO';
-        }
+        },
       },
-      entry: (_ctx, _ev: any) => {}
+      entry: (_ctx, _ev: any) => {},
     });
 
     const service = interpret(machine).start();
@@ -590,7 +595,7 @@ describe('events', () => {
           | { type: 'EVENT_WITH_FLAG'; flag: boolean }
           | {
               type: 'EVENT_WITHOUT_FLAG';
-            }
+            },
       },
       on: {
         EVENT_WITH_FLAG: {
@@ -599,9 +604,9 @@ describe('events', () => {
             ((_accept: boolean) => {})(event.flag);
             // @ts-expect-error
             ((_accept: 'is not any') => {})(event);
-          }
-        }
-      }
+          },
+        },
+      },
     });
   });
 
@@ -615,7 +620,7 @@ describe('events', () => {
           | { type: 'EVENT_WITH_FLAG'; flag: boolean }
           | {
               type: 'EVENT_WITHOUT_FLAG';
-            }
+            },
       },
       on: {
         '*': {
@@ -625,9 +630,9 @@ describe('events', () => {
             );
             // @ts-expect-error
             ((_accept: 'is not any') => {})(event);
-          }
-        }
-      }
+          },
+        },
+      },
     });
   });
 
@@ -636,8 +641,8 @@ describe('events', () => {
       {
         schema: {
           context: {} as { numbers: number[] },
-          events: {} as { type: 'ADD'; number: number }
-        }
+          events: {} as { type: 'ADD'; number: number },
+        },
       },
       {
         actions: {
@@ -647,9 +652,9 @@ describe('events', () => {
               // @ts-expect-error
               ((_accept: string) => {})(event.number);
               return context.numbers.concat(event.number);
-            }
-          })
-        }
+            },
+          }),
+        },
       }
     );
   });
@@ -657,12 +662,12 @@ describe('events', () => {
   it('action objects used within implementations parameter should get access to the provided event type when using model', () => {
     createModel(
       {
-        numbers: [] as number[]
+        numbers: [] as number[],
       },
       {
         events: {
-          ADD: (number: number) => ({ number })
-        }
+          ADD: (number: number) => ({ number }),
+        },
       }
     ).createMachine(
       {},
@@ -674,9 +679,9 @@ describe('events', () => {
               // @ts-expect-error
               ((_accept: string) => {})(event.number);
               return context.numbers.concat(event.number);
-            }
-          })
-        }
+            },
+          }),
+        },
       }
     );
   });
@@ -686,15 +691,15 @@ describe('events', () => {
       schema: {
         context: {} as {
           count: number;
-        }
+        },
       },
       on: {
         FOO: {
           actions: (_context, event) => {
             ((_accept: string) => {})(event.type);
-          }
-        }
-      }
+          },
+        },
+      },
     });
   });
 });
@@ -705,8 +710,8 @@ describe('interpreter', () => {
       interpret(
         createMachine({
           schema: {
-            context: {} as { count: number }
-          }
+            context: {} as { count: number },
+          },
         })
       )
     );
@@ -728,7 +733,7 @@ describe('spawn', () => {
     }) {}
 
     createParent({
-      spawnChild: () => spawn(createChild())
+      spawnChild: () => spawn(createChild()),
     });
   });
 });
@@ -738,12 +743,12 @@ describe('service-targets', () => {
     const machine = createMachine({
       invoke: {
         src: () => new Promise((resolve) => resolve(1)),
-        onDone: ['a', 'b']
+        onDone: ['a', 'b'],
       },
       states: {
         a: {},
-        b: {}
-      }
+        b: {},
+      },
     });
     noop(machine);
     expect(true).toBeTruthy();
@@ -753,12 +758,12 @@ describe('service-targets', () => {
     const machine = createMachine({
       invoke: {
         src: () => new Promise((resolve) => resolve(1)),
-        onDone: [{ target: 'a' }, { target: 'b' }]
+        onDone: [{ target: 'a' }, { target: 'b' }],
       },
       states: {
         a: {},
-        b: {}
-      }
+        b: {},
+      },
     });
     noop(machine);
     expect(true).toBeTruthy();
@@ -768,12 +773,12 @@ describe('service-targets', () => {
     const machine = createMachine({
       invoke: {
         src: () => new Promise((resolve) => resolve(1)),
-        onDone: [{ target: 'a' }, 'b']
+        onDone: [{ target: 'a' }, 'b'],
       },
       states: {
         a: {},
-        b: {}
-      }
+        b: {},
+      },
     });
     noop(machine);
     expect(true).toBeTruthy();
@@ -784,17 +789,17 @@ describe('actions', () => {
   it('context should get inferred for builtin actions used as an entry action', () => {
     createMachine({
       schema: {
-        context: {} as { count: number }
+        context: {} as { count: number },
       },
       context: {
-        count: 0
+        count: 0,
       },
       entry: assign((ctx) => {
         ((_accept: number) => {})(ctx.count);
         // @ts-expect-error
         ((_accept: "ain't any") => {})(ctx.count);
         return {};
-      })
+      }),
     });
   });
 
@@ -802,10 +807,10 @@ describe('actions', () => {
     createMachine({
       schema: {
         context: {} as { count: number },
-        events: {} as { type: 'FOO' } | { type: 'BAR' }
+        events: {} as { type: 'FOO' } | { type: 'BAR' },
       },
       context: {
-        count: 0
+        count: 0,
       },
       on: {
         FOO: {
@@ -814,16 +819,16 @@ describe('actions', () => {
             // @ts-expect-error
             ((_accept: "ain't any") => {})(ctx.count);
             return {};
-          })
-        }
-      }
+          }),
+        },
+      },
     });
   });
 
   it('context should get inferred for a builtin action within an array of entry actions', () => {
     createMachine({
       schema: {
-        context: {} as { count: number }
+        context: {} as { count: number },
       },
       entry: [
         'foo',
@@ -832,15 +837,15 @@ describe('actions', () => {
           // @ts-expect-error
           ((_accept: "ain't any") => {})(ctx.count);
           return {};
-        })
-      ]
+        }),
+      ],
     });
   });
 
   it('context should get inferred for a builtin action within an array of transition actions', () => {
     createMachine({
       schema: {
-        context: {} as { count: number }
+        context: {} as { count: number },
       },
       on: {
         FOO: {
@@ -851,10 +856,10 @@ describe('actions', () => {
               // @ts-expect-error
               ((_accept: "ain't any") => {})(ctx.count);
               return {};
-            })
-          ]
-        }
-      }
+            }),
+          ],
+        },
+      },
     });
   });
 
@@ -862,8 +867,8 @@ describe('actions', () => {
     const childMachine = createMachine({
       initial: 'idle',
       states: {
-        idle: {}
-      }
+        idle: {},
+      },
     });
 
     createMachine({
@@ -871,14 +876,14 @@ describe('actions', () => {
         context: {} as {
           count: number;
           childRef: ActorRefFrom<typeof childMachine>;
-        }
+        },
       },
       entry: stop((ctx) => {
         ((_accept: number) => {})(ctx.count);
         // @ts-expect-error
         ((_accept: "ain't any") => {})(ctx.count);
         return ctx.childRef;
-      })
+      }),
     });
   });
 
@@ -886,8 +891,8 @@ describe('actions', () => {
     const childMachine = createMachine({
       initial: 'idle',
       states: {
-        idle: {}
-      }
+        idle: {},
+      },
     });
 
     createMachine({
@@ -895,7 +900,7 @@ describe('actions', () => {
         context: {} as {
           count: number;
           childRef: ActorRefFrom<typeof childMachine>;
-        }
+        },
       },
       on: {
         FOO: {
@@ -904,9 +909,9 @@ describe('actions', () => {
             // @ts-expect-error
             ((_accept: "ain't any") => {})(ctx.count);
             return ctx.childRef;
-          })
-        }
-      }
+          }),
+        },
+      },
     });
   });
 
@@ -915,14 +920,14 @@ describe('actions', () => {
       schema: {
         context: {} as {
           count: number;
-        }
+        },
       },
       entry: stop(
         // @ts-expect-error
         (ctx) => {
           return ctx.count;
         }
-      )
+      ),
     });
   });
 
@@ -935,7 +940,7 @@ describe('actions', () => {
           count: number;
           childRef: ActorRefFrom<typeof childMachine>;
           promiseRef: ActorRefFrom<Promise<string>>;
-        }
+        },
       },
       entry: [
         stop((ctx) => {
@@ -949,8 +954,8 @@ describe('actions', () => {
           // @ts-expect-error
           ((_accept: "ain't any") => {})(ctx.count);
           return ctx.promiseRef;
-        })
-      ]
+        }),
+      ],
     });
   });
 
@@ -963,13 +968,13 @@ describe('actions', () => {
         context: {} as {
           count: number;
           mode: 'foo' | 'bar' | null;
-        }
+        },
       },
       context: {
         count: 0,
-        mode: null
+        mode: null,
       },
-      entry: assign({ mode: 'foo' })
+      entry: assign({ mode: 'foo' }),
     });
   });
 
@@ -982,16 +987,16 @@ describe('actions', () => {
         },
         events: {} as {
           type: 'TOGGLE';
-        }
+        },
       },
       context: {
         count: 0,
-        skip: true
+        skip: true,
       },
       entry: assign({
         count: (context) => context.count + 1,
-        skip: true
-      })
+        skip: true,
+      }),
     });
   });
 });

@@ -1,5 +1,5 @@
-import { interpret } from '../src/interpreter';
 import { createMachine } from '../src';
+import { interpret } from '../src/interpreter';
 import { waitFor } from '../src/waitFor';
 
 describe('waitFor', () => {
@@ -8,10 +8,10 @@ describe('waitFor', () => {
       initial: 'a',
       states: {
         a: {
-          on: { NEXT: 'b' }
+          on: { NEXT: 'b' },
         },
-        b: {}
-      }
+        b: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -28,19 +28,21 @@ describe('waitFor', () => {
       initial: 'a',
       states: {
         a: {
-          on: { NEXT: 'b' }
+          on: { NEXT: 'b' },
         },
         b: {
-          on: { NEXT: 'c' }
+          on: { NEXT: 'c' },
         },
-        c: {}
-      }
+        c: {},
+      },
     });
 
     const service = interpret(machine).start();
 
     try {
-      await waitFor(service, (state) => state.matches('c'), { timeout: 10 });
+      await waitFor(service, (state) => state.matches('c'), {
+        timeout: 10,
+      });
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
     }
@@ -51,20 +53,20 @@ describe('waitFor', () => {
       initial: 'a',
       states: {
         a: {
-          on: { NEXT: 'b' }
+          on: { NEXT: 'b' },
         },
         b: {
-          on: { NEXT: 'c' }
+          on: { NEXT: 'c' },
         },
-        c: {}
-      }
+        c: {},
+      },
     });
     const service = interpret(machine).start();
     const result = await Promise.race([
       waitFor(service, (state) => state.matches('c'), {
-        timeout: Infinity
+        timeout: Infinity,
       }),
-      new Promise((res) => setTimeout(res, 10)).then(() => 'timeout')
+      new Promise((res) => setTimeout(res, 10)).then(() => 'timeout'),
     ]);
 
     expect(result).toBe('timeout');
@@ -76,12 +78,12 @@ describe('waitFor', () => {
       initial: 'a',
       states: {
         a: {
-          on: { NEXT: 'b' }
+          on: { NEXT: 'b' },
         },
         b: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -101,8 +103,8 @@ describe('waitFor', () => {
     const machine = createMachine({
       initial: 'a',
       states: {
-        a: {}
-      }
+        a: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -119,11 +121,11 @@ describe('waitFor', () => {
       states: {
         a: {
           on: {
-            NEXT: 'b'
-          }
+            NEXT: 'b',
+          },
         },
-        b: {}
-      }
+        b: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -144,21 +146,21 @@ describe('waitFor', () => {
       states: {
         a: {
           on: {
-            NEXT: 'b'
-          }
+            NEXT: 'b',
+          },
         },
         b: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
-    service.send({ type: 'NEXT' });
 
-    await expect(
+    expect(
       waitFor(service, (state) => state.matches('b'))
     ).resolves.toHaveProperty('value', 'b');
+    service.send({ type: 'NEXT' });
   });
 
   it('should immediately reject for an actor in its final state that does not match the predicate', async () => {
@@ -167,18 +169,18 @@ describe('waitFor', () => {
       states: {
         a: {
           on: {
-            NEXT: 'b'
-          }
+            NEXT: 'b',
+          },
         },
         b: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
-    service.send({ type: 'NEXT' });
 
+    service.send({ type: 'NEXT' });
     await expect(
       waitFor(service, (state) => state.matches('a'))
     ).rejects.toMatchInlineSnapshot(

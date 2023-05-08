@@ -1,5 +1,5 @@
-import { raise, assign } from '../src/actions';
-import { createMachine, interpret, Machine, StateValue } from '../src';
+import { Machine, StateValue, createMachine, interpret } from '../src';
+import { assign, raise } from '../src/actions';
 import { testMultiTransition } from './utils';
 
 const composerMachine = Machine({
@@ -17,9 +17,9 @@ const composerMachine = Machine({
           on: {
             switchToProjectManagement: [
               {
-                target: 'ProjectManagement'
-              }
-            ]
+                target: 'ProjectManagement',
+              },
+            ],
           },
           states: {
             SelectionStatus: {
@@ -28,19 +28,19 @@ const composerMachine = Machine({
                 singleClickActivity: [
                   {
                     target: '.SelectedActivity',
-                    actions: ['selectActivity']
-                  }
+                    actions: ['selectActivity'],
+                  },
                 ],
                 singleClickLink: [
                   {
                     target: '.SelectedLink',
-                    actions: ['selectLink']
-                  }
-                ]
+                    actions: ['selectLink'],
+                  },
+                ],
               },
               states: {
                 SelectedNone: {
-                  onEntry: ['redraw']
+                  onEntry: ['redraw'],
                 },
                 SelectedActivity: {
                   onEntry: ['redraw'],
@@ -48,10 +48,10 @@ const composerMachine = Machine({
                     singleClickCanvas: [
                       {
                         target: 'SelectedNone',
-                        actions: ['selectNone']
-                      }
-                    ]
-                  }
+                        actions: ['selectNone'],
+                      },
+                    ],
+                  },
                 },
                 SelectedLink: {
                   onEntry: ['redraw'],
@@ -59,12 +59,12 @@ const composerMachine = Machine({
                     singleClickCanvas: [
                       {
                         target: 'SelectedNone',
-                        actions: ['selectNone']
-                      }
-                    ]
-                  }
-                }
-              }
+                        actions: ['selectNone'],
+                      },
+                    ],
+                  },
+                },
+              },
             },
             ClipboardStatus: {
               initial: 'Empty',
@@ -74,57 +74,57 @@ const composerMachine = Machine({
                   on: {
                     cutInClipboardSuccess: [
                       {
-                        target: 'FilledByCut'
-                      }
+                        target: 'FilledByCut',
+                      },
                     ],
                     copyInClipboardSuccess: [
                       {
-                        target: 'FilledByCopy'
-                      }
-                    ]
-                  }
+                        target: 'FilledByCopy',
+                      },
+                    ],
+                  },
                 },
                 FilledByCopy: {
                   on: {
                     cutInClipboardSuccess: [
                       {
-                        target: 'FilledByCut'
-                      }
+                        target: 'FilledByCut',
+                      },
                     ],
                     copyInClipboardSuccess: [
                       {
-                        target: 'FilledByCopy'
-                      }
+                        target: 'FilledByCopy',
+                      },
                     ],
                     pasteFromClipboardSuccess: [
                       {
-                        target: 'FilledByCopy'
-                      }
-                    ]
-                  }
+                        target: 'FilledByCopy',
+                      },
+                    ],
+                  },
                 },
                 FilledByCut: {
                   on: {
                     cutInClipboardSuccess: [
                       {
-                        target: 'FilledByCut'
-                      }
+                        target: 'FilledByCut',
+                      },
                     ],
                     copyInClipboardSuccess: [
                       {
-                        target: 'FilledByCopy'
-                      }
+                        target: 'FilledByCopy',
+                      },
                     ],
                     pasteFromClipboardSuccess: [
                       {
-                        target: 'Empty'
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
+                        target: 'Empty',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
         },
         ProjectManagement: {
           id: 'ProjectManagementRO',
@@ -132,9 +132,9 @@ const composerMachine = Machine({
           on: {
             switchToStructureEdit: [
               {
-                target: 'StructureEdit'
-              }
-            ]
+                target: 'StructureEdit',
+              },
+            ],
           },
           states: {
             SelectionStatus: {
@@ -143,19 +143,19 @@ const composerMachine = Machine({
                 singleClickActivity: [
                   {
                     target: '.SelectedActivity',
-                    actions: ['selectActivity']
-                  }
+                    actions: ['selectActivity'],
+                  },
                 ],
                 singleClickLink: [
                   {
                     target: '.SelectedLink',
-                    actions: ['selectLink']
-                  }
-                ]
+                    actions: ['selectLink'],
+                  },
+                ],
               },
               states: {
                 SelectedNone: {
-                  onEntry: ['redraw']
+                  onEntry: ['redraw'],
                 },
                 SelectedActivity: {
                   onEntry: ['redraw'],
@@ -163,10 +163,10 @@ const composerMachine = Machine({
                     singleClickCanvas: [
                       {
                         target: 'SelectedNone',
-                        actions: ['selectNone']
-                      }
-                    ]
-                  }
+                        actions: ['selectNone'],
+                      },
+                    ],
+                  },
                 },
                 SelectedLink: {
                   onEntry: ['redraw'],
@@ -174,18 +174,18 @@ const composerMachine = Machine({
                     singleClickCanvas: [
                       {
                         target: 'SelectedNone',
-                        actions: ['selectNone']
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                        actions: ['selectNone'],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 const wakMachine = Machine({
@@ -198,38 +198,38 @@ const wakMachine = Machine({
       states: {
         wak1sonA: {
           onEntry: 'wak1sonAenter',
-          onExit: 'wak1sonAexit'
+          onExit: 'wak1sonAexit',
         },
         wak1sonB: {
           onEntry: 'wak1sonBenter',
-          onExit: 'wak1sonBexit'
-        }
+          onExit: 'wak1sonBexit',
+        },
       },
       on: {
-        WAK1: '.wak1sonB'
+        WAK1: '.wak1sonB',
       },
       onEntry: 'wak1enter',
-      onExit: 'wak1exit'
+      onExit: 'wak1exit',
     },
     wak2: {
       initial: 'wak2sonA',
       states: {
         wak2sonA: {
           onEntry: 'wak2sonAenter',
-          onExit: 'wak2sonAexit'
+          onExit: 'wak2sonAexit',
         },
         wak2sonB: {
           onEntry: 'wak2sonBenter',
-          onExit: 'wak2sonBexit'
-        }
+          onExit: 'wak2sonBexit',
+        },
       },
       on: {
-        WAK2: '.wak2sonB'
+        WAK2: '.wak2sonB',
       },
       onEntry: 'wak2enter',
-      onExit: 'wak2exit'
-    }
-  }
+      onExit: 'wak2exit',
+    },
+  },
 });
 
 const wordMachine = Machine({
@@ -240,53 +240,53 @@ const wordMachine = Machine({
       initial: 'off',
       states: {
         on: {
-          on: { TOGGLE_BOLD: 'off' }
+          on: { TOGGLE_BOLD: 'off' },
         },
         off: {
-          on: { TOGGLE_BOLD: 'on' }
-        }
-      }
+          on: { TOGGLE_BOLD: 'on' },
+        },
+      },
     },
     underline: {
       initial: 'off',
       states: {
         on: {
-          on: { TOGGLE_UNDERLINE: 'off' }
+          on: { TOGGLE_UNDERLINE: 'off' },
         },
         off: {
-          on: { TOGGLE_UNDERLINE: 'on' }
-        }
-      }
+          on: { TOGGLE_UNDERLINE: 'on' },
+        },
+      },
     },
     italics: {
       initial: 'off',
       states: {
         on: {
-          on: { TOGGLE_ITALICS: 'off' }
+          on: { TOGGLE_ITALICS: 'off' },
         },
         off: {
-          on: { TOGGLE_ITALICS: 'on' }
-        }
-      }
+          on: { TOGGLE_ITALICS: 'on' },
+        },
+      },
     },
     list: {
       initial: 'none',
       states: {
         none: {
-          on: { BULLETS: 'bullets', NUMBERS: 'numbers' }
+          on: { BULLETS: 'bullets', NUMBERS: 'numbers' },
         },
         bullets: {
-          on: { NONE: 'none', NUMBERS: 'numbers' }
+          on: { NONE: 'none', NUMBERS: 'numbers' },
         },
         numbers: {
-          on: { BULLETS: 'bullets', NONE: 'none' }
-        }
-      }
-    }
+          on: { BULLETS: 'bullets', NONE: 'none' },
+        },
+      },
+    },
   },
   on: {
-    RESET: '#word' // TODO: this should be 'word' or [{ internal: false }]
-  }
+    RESET: '#word', // TODO: this should be 'word' or [{ internal: false }]
+  },
 });
 
 const flatParallelMachine = Machine({
@@ -298,10 +298,10 @@ const flatParallelMachine = Machine({
       initial: 'one',
       states: {
         one: { on: { E: 'two' } },
-        two: {}
-      }
-    }
-  }
+        two: {},
+      },
+    },
+  },
 });
 
 const raisingParallelMachine = Machine({
@@ -315,24 +315,24 @@ const raisingParallelMachine = Machine({
           onEntry: [raise('TURN_OFF')],
           on: {
             EVENT_OUTER1_B: 'B',
-            EVENT_OUTER1_C: 'C'
-          }
+            EVENT_OUTER1_C: 'C',
+          },
         },
         B: {
           onEntry: [raise('TURN_ON')],
           on: {
             EVENT_OUTER1_A: 'A',
-            EVENT_OUTER1_C: 'C'
-          }
+            EVENT_OUTER1_C: 'C',
+          },
         },
         C: {
           onEntry: [raise('CLEAR')],
           on: {
             EVENT_OUTER1_A: 'A',
-            EVENT_OUTER1_B: 'B'
-          }
-        }
-      }
+            EVENT_OUTER1_B: 'B',
+          },
+        },
+      },
     },
     OUTER2: {
       type: 'parallel',
@@ -342,34 +342,34 @@ const raisingParallelMachine = Machine({
           states: {
             OFF: {
               on: {
-                TURN_ON: 'ON'
-              }
+                TURN_ON: 'ON',
+              },
             },
             ON: {
               on: {
-                CLEAR: 'OFF'
-              }
-            }
-          }
+                CLEAR: 'OFF',
+              },
+            },
+          },
         },
         INNER2: {
           initial: 'OFF',
           states: {
             OFF: {
               on: {
-                TURN_ON: 'ON'
-              }
+                TURN_ON: 'ON',
+              },
             },
             ON: {
               on: {
-                TURN_OFF: 'OFF'
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                TURN_OFF: 'OFF',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 const nestedParallelState = Machine({
@@ -381,8 +381,8 @@ const nestedParallelState = Machine({
         STATE_OFF: {
           on: {
             EVENT_COMPLEX: 'STATE_ON',
-            EVENT_SIMPLE: 'STATE_ON'
-          }
+            EVENT_SIMPLE: 'STATE_ON',
+          },
         },
         STATE_ON: {
           type: 'parallel',
@@ -392,34 +392,34 @@ const nestedParallelState = Machine({
               states: {
                 STATE_IDLE_0: {
                   on: {
-                    EVENT_STATE_NTJ0_WORK: 'STATE_WORKING_0'
-                  }
+                    EVENT_STATE_NTJ0_WORK: 'STATE_WORKING_0',
+                  },
                 },
                 STATE_WORKING_0: {
                   on: {
-                    EVENT_STATE_NTJ0_IDLE: 'STATE_IDLE_0'
-                  }
-                }
-              }
+                    EVENT_STATE_NTJ0_IDLE: 'STATE_IDLE_0',
+                  },
+                },
+              },
             },
             STATE_NTJ1: {
               initial: 'STATE_IDLE_1',
               states: {
                 STATE_IDLE_1: {
                   on: {
-                    EVENT_STATE_NTJ1_WORK: 'STATE_WORKING_1'
-                  }
+                    EVENT_STATE_NTJ1_WORK: 'STATE_WORKING_1',
+                  },
                 },
                 STATE_WORKING_1: {
                   on: {
-                    EVENT_STATE_NTJ1_IDLE: 'STATE_IDLE_1'
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    EVENT_STATE_NTJ1_IDLE: 'STATE_IDLE_1',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     OUTER2: {
       initial: 'STATE_OFF',
@@ -427,8 +427,8 @@ const nestedParallelState = Machine({
         STATE_OFF: {
           on: {
             EVENT_COMPLEX: 'STATE_ON_COMPLEX',
-            EVENT_SIMPLE: 'STATE_ON_SIMPLE'
-          }
+            EVENT_SIMPLE: 'STATE_ON_SIMPLE',
+          },
         },
         STATE_ON_SIMPLE: {},
         STATE_ON_COMPLEX: {
@@ -438,21 +438,21 @@ const nestedParallelState = Machine({
               initial: 'STATE_OFF',
               states: {
                 STATE_OFF: {},
-                STATE_ON: {}
-              }
+                STATE_ON: {},
+              },
             },
             STATE_INNER2: {
               initial: 'STATE_OFF',
               states: {
                 STATE_OFF: {},
-                STATE_ON: {}
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                STATE_ON: {},
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 const deepFlatParallelMachine = Machine({
@@ -463,14 +463,14 @@ const deepFlatParallelMachine = Machine({
       initial: 'A',
       on: {
         a: {
-          target: 'V.A'
+          target: 'V.A',
         },
         b: {
-          target: 'V.B'
+          target: 'V.B',
         },
         c: {
-          target: 'V.C'
-        }
+          target: 'V.C',
+        },
       },
       states: {
         A: {},
@@ -481,15 +481,15 @@ const deepFlatParallelMachine = Machine({
               type: 'parallel',
               states: {
                 BBB_A: {},
-                BBB_B: {}
-              }
-            }
-          }
+                BBB_B: {},
+              },
+            },
+          },
         },
-        C: {}
-      }
-    }
-  }
+        C: {},
+      },
+    },
+  },
 });
 
 describe('parallel states', () => {
@@ -500,7 +500,7 @@ describe('parallel states', () => {
       bold: 'off',
       italics: 'off',
       underline: 'off',
-      list: 'none'
+      list: 'none',
     });
   });
 
@@ -510,36 +510,36 @@ describe('parallel states', () => {
         bold: 'on',
         italics: 'off',
         underline: 'off',
-        list: 'none'
-      }
+        list: 'none',
+      },
     },
     'bold.on': {
       TOGGLE_BOLD: {
         bold: 'off',
         italics: 'off',
         underline: 'off',
-        list: 'none'
-      }
+        list: 'none',
+      },
     },
     [JSON.stringify({
       bold: 'off',
       italics: 'off',
       underline: 'on',
-      list: 'bullets'
+      list: 'bullets',
     })]: {
       'TOGGLE_BOLD, TOGGLE_ITALICS': {
         bold: 'on',
         italics: 'on',
         underline: 'on',
-        list: 'bullets'
+        list: 'bullets',
       },
       RESET: {
         bold: 'off',
         italics: 'off',
         underline: 'off',
-        list: 'none'
-      }
-    }
+        list: 'none',
+      },
+    },
   };
 
   Object.keys(expected).forEach((fromState) => {
@@ -561,22 +561,34 @@ describe('parallel states', () => {
   });
 
   it('should have all parallel states represented in the state value', () => {
-    const nextState = wakMachine.transition(wakMachine.initialState, 'WAK1');
+    const nextState = wakMachine.transition(
+      wakMachine.initialState,
+      'WAK1'
+    );
 
-    expect(nextState.value).toEqual({ wak1: 'wak1sonB', wak2: 'wak2sonA' });
+    expect(nextState.value).toEqual({
+      wak1: 'wak1sonB',
+      wak2: 'wak2sonA',
+    });
   });
 
   it('should have all parallel states represented in the state value (2)', () => {
-    const nextState = wakMachine.transition(wakMachine.initialState, 'WAK2');
+    const nextState = wakMachine.transition(
+      wakMachine.initialState,
+      'WAK2'
+    );
 
-    expect(nextState.value).toEqual({ wak1: 'wak1sonA', wak2: 'wak2sonB' });
+    expect(nextState.value).toEqual({
+      wak1: 'wak1sonA',
+      wak2: 'wak2sonB',
+    });
   });
 
   it('should work with regions without states', () => {
     expect(flatParallelMachine.initialState.value).toEqual({
       foo: {},
       bar: {},
-      baz: 'one'
+      baz: 'one',
     });
   });
 
@@ -588,7 +600,7 @@ describe('parallel states', () => {
     expect(nextState.value).toEqual({
       foo: {},
       bar: {},
-      baz: 'two'
+      baz: 'two',
     });
   });
 
@@ -602,9 +614,9 @@ describe('parallel states', () => {
       ReadOnly: {
         StructureEdit: {
           SelectionStatus: 'SelectedActivity',
-          ClipboardStatus: 'Empty'
-        }
-      }
+          ClipboardStatus: 'Empty',
+        },
+      },
     });
   });
 
@@ -613,8 +625,8 @@ describe('parallel states', () => {
       OUTER1: 'C',
       OUTER2: {
         INNER1: 'OFF',
-        INNER2: 'OFF'
-      }
+        INNER2: 'OFF',
+      },
     });
   });
 
@@ -628,28 +640,28 @@ describe('parallel states', () => {
       OUTER1: 'B',
       OUTER2: {
         INNER1: 'ON',
-        INNER2: 'ON'
-      }
+        INNER2: 'ON',
+      },
     });
   });
 
-  xit('should handle simultaneous orthogonal transitions', () => {
+  it('should handle simultaneous orthogonal transitions', () => {
     type Events = { type: 'CHANGE'; value: string } | { type: 'SAVE' };
     const simultaneousMachine = Machine<{ value: string }, Events>({
       id: 'yamlEditor',
       type: 'parallel',
       context: {
-        value: ''
+        value: '',
       },
       states: {
         editing: {
           on: {
             CHANGE: {
               actions: assign({
-                value: (_, e) => e.value
-              })
-            }
-          }
+                value: (_, e) => e.value,
+              }),
+            },
+          },
         },
         status: {
           initial: 'unsaved',
@@ -658,18 +670,18 @@ describe('parallel states', () => {
               on: {
                 SAVE: {
                   target: 'saved',
-                  actions: 'save'
-                }
-              }
+                  actions: 'save',
+                },
+              },
             },
             saved: {
               on: {
-                CHANGE: 'unsaved'
-              }
-            }
-          }
-        }
-      }
+                CHANGE: 'unsaved',
+              },
+            },
+          },
+        },
+      },
     });
 
     const savedState = simultaneousMachine.transition(
@@ -678,10 +690,10 @@ describe('parallel states', () => {
     );
     const unsavedState = simultaneousMachine.transition(savedState, {
       type: 'CHANGE',
-      value: 'something'
+      value: 'something',
     });
 
-    expect(unsavedState.value).toEqual({});
+    expect(unsavedState.value).toEqual({ editing: {}, status: 'unsaved' });
   });
 
   describe('transitions with nested parallel states', () => {
@@ -705,10 +717,10 @@ describe('parallel states', () => {
         OUTER1: {
           STATE_ON: {
             STATE_NTJ0: 'STATE_WORKING_0',
-            STATE_NTJ1: 'STATE_IDLE_1'
-          }
+            STATE_NTJ1: 'STATE_IDLE_1',
+          },
         },
-        OUTER2: 'STATE_ON_SIMPLE'
+        OUTER2: 'STATE_ON_SIMPLE',
       });
     });
 
@@ -722,15 +734,15 @@ describe('parallel states', () => {
         OUTER1: {
           STATE_ON: {
             STATE_NTJ0: 'STATE_WORKING_0',
-            STATE_NTJ1: 'STATE_IDLE_1'
-          }
+            STATE_NTJ1: 'STATE_IDLE_1',
+          },
         },
         OUTER2: {
           STATE_ON_COMPLEX: {
             STATE_INNER1: 'STATE_OFF',
-            STATE_INNER2: 'STATE_OFF'
-          }
-        }
+            STATE_INNER2: 'STATE_OFF',
+          },
+        },
       });
     });
   });
@@ -742,20 +754,20 @@ describe('parallel states', () => {
       states: {
         A: {
           on: {
-            'to-B': 'B'
-          }
+            'to-B': 'B',
+          },
         },
         B: {
           type: 'parallel',
           states: {
             C: {},
-            D: {}
-          }
-        }
+            D: {},
+          },
+        },
       },
       on: {
-        'to-A': 'A'
-      }
+        'to-A': 'A',
+      },
     });
 
     it('should represent the flat nested parallel states in the state value', () => {
@@ -764,8 +776,8 @@ describe('parallel states', () => {
       expect(result.value).toEqual({
         B: {
           C: {},
-          D: {}
-        }
+          D: {},
+        },
       });
     });
   });
@@ -783,11 +795,11 @@ describe('parallel states', () => {
           B: {
             BB: {
               BBB_A: {},
-              BBB_B: {}
-            }
-          }
+              BBB_B: {},
+            },
+          },
         },
-        X: {}
+        X: {},
       });
     });
 
@@ -801,21 +813,21 @@ describe('parallel states', () => {
               UPDATE: {
                 actions: () => {
                   /* do nothing */
-                }
-              }
-            }
+                },
+              },
+            },
           },
           bar: {
             on: {
-              UPDATE: '.baz'
+              UPDATE: '.baz',
             },
             initial: 'idle',
             states: {
               idle: {},
-              baz: {}
-            }
-          }
-        }
+              baz: {},
+            },
+          },
+        },
       });
 
       expect(() => {
@@ -838,16 +850,16 @@ describe('parallel states', () => {
               About: {
                 id: 'About',
                 on: {
-                  dashboard: '#Dashboard'
-                }
+                  dashboard: '#Dashboard',
+                },
               },
               Dashboard: {
                 id: 'Dashboard',
                 on: {
-                  about: '#About'
-                }
-              }
-            }
+                  about: '#About',
+                },
+              },
+            },
           },
           Menu: {
             id: 'Menu',
@@ -856,19 +868,19 @@ describe('parallel states', () => {
               Closed: {
                 id: 'Closed',
                 on: {
-                  toggle: '#Opened'
-                }
+                  toggle: '#Opened',
+                },
               },
               Opened: {
                 id: 'Opened',
                 on: {
                   toggle: '#Closed',
-                  'go to dashboard': '#Dashboard'
-                }
-              }
-            }
-          }
-        }
+                  'go to dashboard': '#Dashboard',
+                },
+              },
+            },
+          },
+        },
       });
 
       const openMenuState = testMachine.transition(
@@ -898,19 +910,21 @@ describe('parallel states', () => {
             states: {
               foobar: {
                 on: {
-                  GOTO_FOOBAZ: 'foobaz'
-                }
+                  GOTO_FOOBAZ: 'foobaz',
+                },
               },
               foobaz: {
-                entry: assign({ log: (ctx) => [...ctx.log, 'entered foobaz'] }),
+                entry: assign({
+                  log: (ctx) => [...ctx.log, 'entered foobaz'],
+                }),
                 on: {
-                  GOTO_FOOBAZ: 'foobaz'
-                }
-              }
-            }
+                  GOTO_FOOBAZ: 'foobaz',
+                },
+              },
+            },
           },
-          bar: {}
-        }
+          bar: {},
+        },
       });
 
       const run1 = testMachine.transition(
@@ -936,47 +950,47 @@ describe('parallel states', () => {
               states: {
                 idle: {
                   on: {
-                    FINISH: 'finished'
-                  }
+                    FINISH: 'finished',
+                  },
                 },
                 finished: {
-                  type: 'final'
-                }
-              }
+                  type: 'final',
+                },
+              },
             },
             b: {
               initial: 'idle',
               states: {
                 idle: {
                   on: {
-                    FINISH: 'finished'
-                  }
+                    FINISH: 'finished',
+                  },
                 },
                 finished: {
-                  type: 'final'
-                }
-              }
+                  type: 'final',
+                },
+              },
             },
             c: {
               initial: 'idle',
               states: {
                 idle: {
                   on: {
-                    FINISH: 'finished'
-                  }
+                    FINISH: 'finished',
+                  },
                 },
                 finished: {
-                  type: 'final'
-                }
-              }
-            }
+                  type: 'final',
+                },
+              },
+            },
           },
-          onDone: 'success'
+          onDone: 'success',
         },
         success: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine)
@@ -996,7 +1010,7 @@ describe('parallel states', () => {
           type: 'parallel',
           states: {
             hist: {
-              type: 'history'
+              type: 'history',
             },
             one: {
               initial: 'wait_one',
@@ -1004,14 +1018,14 @@ describe('parallel states', () => {
                 wait_one: {
                   on: {
                     finish_one: {
-                      target: 'done'
-                    }
-                  }
+                      target: 'done',
+                    },
+                  },
                 },
                 done: {
-                  type: 'final'
-                }
-              }
+                  type: 'final',
+                },
+              },
             },
             two: {
               initial: 'wait_two',
@@ -1019,20 +1033,20 @@ describe('parallel states', () => {
                 wait_two: {
                   on: {
                     finish_two: {
-                      target: 'done'
-                    }
-                  }
+                      target: 'done',
+                    },
+                  },
                 },
                 done: {
-                  type: 'final'
-                }
-              }
-            }
+                  type: 'final',
+                },
+              },
+            },
           },
-          onDone: 'finished'
+          onDone: 'finished',
         },
-        finished: {}
-      }
+        finished: {},
+      },
     });
 
     const service = interpret(machine).start();

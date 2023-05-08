@@ -11,7 +11,7 @@ interface WaitForOptions {
 }
 
 const defaultWaitForOptions: WaitForOptions = {
-  timeout: 10_000 // 10 seconds
+  timeout: 10_000, // 10 seconds
 };
 
 /**
@@ -42,11 +42,14 @@ export function waitFor<TActorRef extends ActorRef<any, any>>(
 ): Promise<EmittedFrom<TActorRef>> {
   const resolvedOptions: WaitForOptions = {
     ...defaultWaitForOptions,
-    ...options
+    ...options,
   };
   return new Promise((res, rej) => {
     let done = false;
-    if (process.env.NODE_ENV !== 'production' && resolvedOptions.timeout < 0) {
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      resolvedOptions.timeout < 0
+    ) {
       console.error(
         '`timeout` passed to `waitFor` is negative and it will reject its internal promise immediately.'
       );
@@ -56,7 +59,11 @@ export function waitFor<TActorRef extends ActorRef<any, any>>(
         ? undefined
         : setTimeout(() => {
             sub.unsubscribe();
-            rej(new Error(`Timeout of ${resolvedOptions.timeout} ms exceeded`));
+            rej(
+              new Error(
+                `Timeout of ${resolvedOptions.timeout} ms exceeded`
+              )
+            );
           }, resolvedOptions.timeout);
 
     const dispose = () => {
@@ -79,7 +86,7 @@ export function waitFor<TActorRef extends ActorRef<any, any>>(
       complete: () => {
         dispose();
         rej(new Error(`Actor terminated without satisfying predicate`));
-      }
+      },
     });
     if (done) {
       sub.unsubscribe();

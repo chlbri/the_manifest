@@ -1,10 +1,13 @@
-import { createMachine, assign } from '../src/index';
+import Ajv from 'ajv/dist/2020';
 import * as machineSchema from '../src/machine.schema.json';
 
-import * as Ajv from 'ajv';
-
 const ajv = new Ajv();
+const draft7MetaSchema = require('ajv/dist/refs/json-schema-draft-07.json');
+ajv.addMetaSchema(draft7MetaSchema);
+ajv.addKeyword('definition');
 const validate = ajv.compile(machineSchema);
+
+import { assign, createMachine } from '../src/index';
 
 describe('json', () => {
   it('should serialize the machine', () => {
@@ -13,23 +16,25 @@ describe('json', () => {
       version: '1.0.0',
       context: {
         number: 0,
-        string: 'hello'
+        string: 'hello',
       },
       invoke: [{ id: 'invokeId', src: 'invokeSrc', autoForward: true }],
       states: {
         testActions: {
-          invoke: [{ id: 'invokeId', src: 'invokeSrc', autoForward: true }],
+          invoke: [
+            { id: 'invokeId', src: 'invokeSrc', autoForward: true },
+          ],
           entry: [
             'stringActionType',
             {
-              type: 'objectActionType'
+              type: 'objectActionType',
             },
             {
               type: 'objectActionTypeWithExec',
               exec: () => {
                 return true;
               },
-              other: 'any'
+              other: 'any',
             },
             function actionFunction() {
               return true;
@@ -37,33 +42,33 @@ describe('json', () => {
             assign({
               number: 10,
               string: 'test',
-              evalNumber: () => 42
+              evalNumber: () => 42,
             }),
             assign((ctx) => ({
-              ...ctx
-            }))
+              ...ctx,
+            })),
           ],
           on: {
             TO_FOO: {
               target: ['foo', 'bar'],
-              cond: (ctx) => !!ctx.string
-            }
+              cond: (ctx) => !!ctx.string,
+            },
           },
           after: {
-            1000: 'bar'
-          }
+            1000: 'bar',
+          },
         },
         foo: {},
         bar: {},
         testHistory: {
           type: 'history',
-          history: 'deep'
+          history: 'deep',
         },
         testFinal: {
           type: 'final',
           data: {
-            something: 'else'
-          }
+            something: 'else',
+          },
         },
         testParallel: {
           type: 'parallel',
@@ -71,18 +76,18 @@ describe('json', () => {
             one: {
               initial: 'inactive',
               states: {
-                inactive: {}
-              }
+                inactive: {},
+              },
             },
             two: {
               initial: 'inactive',
               states: {
-                inactive: {}
-              }
-            }
-          }
-        }
-      }
+                inactive: {},
+              },
+            },
+          },
+        },
+      },
     });
 
     const json = JSON.parse(JSON.stringify(machine.definition));
@@ -101,7 +106,7 @@ describe('json', () => {
       id: 'something',
       key: 'something',
       type: 'invalid type',
-      states: {}
+      states: {},
     };
 
     validate(invalidMachineConfig);
@@ -116,15 +121,15 @@ describe('json', () => {
           invoke: {
             src: 'someSrc',
             onDone: 'foo',
-            onError: 'bar'
+            onError: 'bar',
           },
           on: {
-            EVENT: 'foo'
-          }
+            EVENT: 'foo',
+          },
         },
         foo: {},
-        bar: {}
-      }
+        bar: {},
+      },
     });
 
     const machineJSON = JSON.stringify(machine);
@@ -133,7 +138,8 @@ describe('json', () => {
 
     const revivedMachine = createMachine(machineObject);
 
-    expect(revivedMachine.states.active.transitions).toMatchInlineSnapshot(`
+    expect(revivedMachine.states.active.transitions)
+      .toMatchInlineSnapshot(`
       Array [
         Object {
           "actions": Array [],
