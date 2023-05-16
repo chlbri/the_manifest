@@ -1,4 +1,4 @@
-import { Machine } from '../src';
+import { Machine as $Machine } from '../src';
 
 const config = {
   initial: 'a',
@@ -9,31 +9,31 @@ const config = {
         b: {
           initial: 'c',
           states: {
-            c: {}
-          }
-        }
-      }
+            c: {},
+          },
+        },
+      },
     },
-    leaf: {}
-  }
+    leaf: {},
+  },
 };
 
-const deepMachine = Machine(config);
+const deepMachine = $Machine(config);
 
-const parallelDeepMachine = Machine({
+const parallelDeepMachine = $Machine({
   type: 'parallel',
   states: {
     foo: config,
-    bar: config
-  }
+    bar: config,
+  },
 });
 
-const deepParallelMachine = Machine({
+const deepParallelMachine = $Machine({
   initial: 'one',
   states: {
     one: parallelDeepMachine.config,
-    two: parallelDeepMachine.config
-  }
+    two: parallelDeepMachine.config,
+  } as any,
 });
 
 describe('Initial states', () => {
@@ -44,7 +44,7 @@ describe('Initial states', () => {
   it('should return the correct initial state (parallel)', () => {
     expect(parallelDeepMachine.initialState.value).toEqual({
       foo: { a: { b: 'c' } },
-      bar: { a: { b: 'c' } }
+      bar: { a: { b: 'c' } },
     });
   });
 
@@ -52,8 +52,8 @@ describe('Initial states', () => {
     expect(deepParallelMachine.initialState.value).toEqual({
       one: {
         foo: { a: { b: 'c' } },
-        bar: { a: { b: 'c' } }
-      }
+        bar: { a: { b: 'c' } },
+      },
     });
   });
 });

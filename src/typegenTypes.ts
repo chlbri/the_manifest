@@ -1,15 +1,15 @@
 import {
   BaseActionObject,
+  Cast,
+  Compute,
   EventObject,
   IndexByType,
+  IsAny,
   IsNever,
   Prop,
-  Values,
-  IsAny,
   ServiceMap,
-  Cast,
-  Compute
-} from './types';
+  Values,
+} from './types/types';
 
 export interface TypegenDisabled {
   '@@xstate/typegen': false;
@@ -21,7 +21,7 @@ export interface TypegenMeta extends TypegenEnabled {
   /**
    * Allows you to specify all the results of state.matches
    */
-  matchesStates: string | {};
+  matchesStates: string | object;
   /**
    * Allows you to specify all tags used by the machine
    */
@@ -46,7 +46,7 @@ export interface TypegenMeta extends TypegenEnabled {
    *   __tip: 'Declare the type in event types!';
    * }
    */
-  internalEvents: {};
+  internalEvents: object;
   /**
    * Maps the name of the service to the event type
    * of the done.invoke action
@@ -104,7 +104,7 @@ export type AreAllImplementationsAssumedToBeProvided<
   TMissingImplementations = Prop<
     Prop<TResolvedTypesMeta, 'resolved'>,
     'missingImplementations'
-  >
+  >,
 > = IsAny<TResolvedTypesMeta> extends true
   ? true
   : TResolvedTypesMeta extends TypegenEnabled
@@ -122,13 +122,13 @@ export type MissingImplementationsError<
   TMissingImplementations = Prop<
     Prop<TResolvedTypesMeta, 'resolved'>,
     'missingImplementations'
-  >
+  >,
 > = Compute<
   [
     'Some implementations missing',
     Values<{
       [K in keyof TMissingImplementations]: TMissingImplementations[K];
-    }>
+    }>,
   ]
 >;
 
@@ -143,13 +143,14 @@ interface AllImplementationsProvided {
 
 export interface MarkAllImplementationsAsProvided<TResolvedTypesMeta> {
   '@@xstate/typegen': Prop<TResolvedTypesMeta, '@@xstate/typegen'>;
-  resolved: Prop<TResolvedTypesMeta, 'resolved'> & AllImplementationsProvided;
+  resolved: Prop<TResolvedTypesMeta, 'resolved'> &
+    AllImplementationsProvided;
 }
 
 type GenerateServiceEvent<
   TServiceName,
   TEventType,
-  TServiceMap extends ServiceMap
+  TServiceMap extends ServiceMap,
 > = TEventType extends any
   ? {
       type: TEventType;
@@ -158,7 +159,7 @@ type GenerateServiceEvent<
 
 type GenerateServiceEvents<
   TServiceMap extends ServiceMap,
-  TInvokeSrcNameMap
+  TInvokeSrcNameMap,
 > = string extends keyof TServiceMap
   ? never
   : Cast<
@@ -174,10 +175,14 @@ type GenerateServiceEvents<
 
 // we don't even have to do that much here, technically, because `T & unknown` is equivalent to `T`
 // however, this doesn't display nicely in IDE tooltips, so let's fix this
-type MergeWithInternalEvents<TIndexedEvents, TInternalEvents> = TIndexedEvents &
-  // alternatively we could consider using key remapping in mapped types for this in the future
-  // in theory it would be a single iteration rather than two
-  Pick<TInternalEvents, Exclude<keyof TInternalEvents, keyof TIndexedEvents>>;
+type MergeWithInternalEvents<TIndexedEvents, TInternalEvents> =
+  TIndexedEvents &
+    // alternatively we could consider using key remapping in mapped types for this in the future
+    // in theory it would be a single iteration rather than two
+    Pick<
+      TInternalEvents,
+      Exclude<keyof TInternalEvents, keyof TIndexedEvents>
+    >;
 
 type AllowAllEvents = {
   eventsCausingActions: Record<string, string>;
@@ -190,7 +195,7 @@ export interface ResolveTypegenMeta<
   TTypesMeta extends TypegenConstraint,
   TEvent extends EventObject,
   TAction extends BaseActionObject,
-  TServiceMap extends ServiceMap
+  TServiceMap extends ServiceMap,
 > {
   '@@xstate/typegen': TTypesMeta['@@xstate/typegen'];
   resolved: {

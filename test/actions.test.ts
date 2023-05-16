@@ -1,31 +1,34 @@
 import {
+  choose,
+  log,
+  pure,
+  raise,
+  send,
+  sendParent,
+  sendTo,
+  stop,
+} from '../src/actions';
+import {
+  ActorRefFrom,
+  AnyStateMachine,
   Machine,
-  createMachine,
+  StateNode,
+  actions,
   assign,
+  createMachine,
   forwardTo,
   interpret,
   spawn,
-  ActorRefFrom,
-  AnyStateMachine,
-  StateNode,
-  actions
 } from '../src/index';
-import {
-  pure,
-  sendParent,
-  log,
-  choose,
-  sendTo,
-  stop,
-  send,
-  raise
-} from '../src/actions';
+import { emptyFunction } from './fixtures/utils';
 
 const seen = new WeakSet<AnyStateMachine>();
 
 function trackEntries(machine: AnyStateMachine) {
   if (seen.has(machine)) {
-    throw new Error(`This helper can't accept the same machine more than once`);
+    throw new Error(
+      `This helper can't accept the same machine more than once`,
+    );
   }
   seen.add(machine);
 
@@ -33,20 +36,20 @@ function trackEntries(machine: AnyStateMachine) {
 
   function addTrackingActions(
     state: StateNode<any, any, any, any, any, any>,
-    stateDescription: string
+    stateDescription: string,
   ) {
     state.onEntry.unshift({
       type: '__testEntryTracker',
-      exec: () => logs.push(`enter: ${stateDescription}`)
+      exec: () => logs.push(`enter: ${stateDescription}`),
     } as any);
     state.onExit.unshift({
       type: '__testExitTracker',
-      exec: () => logs.push(`exit: ${stateDescription}`)
+      exec: () => logs.push(`exit: ${stateDescription}`),
     } as any);
   }
 
   function addTrackingActionsRecursively(
-    state: StateNode<any, any, any, any, any, any>
+    state: StateNode<any, any, any, any, any, any>,
   ) {
     for (const child of Object.values(state.states)) {
       addTrackingActions(child, child.path.join('.'));
@@ -70,23 +73,23 @@ describe('entry/exit actions', () => {
     states: {
       walk: {
         on: {
-          PED_COUNTDOWN: 'wait'
+          PED_COUNTDOWN: 'wait',
         },
         entry: 'enter_walk',
-        exit: 'exit_walk'
+        exit: 'exit_walk',
       },
       wait: {
         on: {
-          PED_COUNTDOWN: 'stop'
+          PED_COUNTDOWN: 'stop',
         },
         entry: 'enter_wait',
-        exit: 'exit_wait'
+        exit: 'exit_wait',
       },
       stop: {
         entry: ['enter_stop'],
-        exit: ['exit_stop']
-      }
-    }
+        exit: ['exit_stop'],
+      },
+    },
   };
 
   const lightMachine = Machine({
@@ -97,30 +100,30 @@ describe('entry/exit actions', () => {
         on: {
           TIMER: 'yellow',
           POWER_OUTAGE: 'red',
-          NOTHING: 'green'
+          NOTHING: 'green',
         },
         entry: 'enter_green',
-        exit: 'exit_green'
+        exit: 'exit_green',
       },
       yellow: {
         on: {
           TIMER: 'red',
-          POWER_OUTAGE: 'red'
+          POWER_OUTAGE: 'red',
         },
         entry: 'enter_yellow',
-        exit: 'exit_yellow'
+        exit: 'exit_yellow',
       },
       red: {
         on: {
           TIMER: 'green',
           POWER_OUTAGE: 'red',
-          NOTHING: 'red'
+          NOTHING: 'red',
         },
         entry: 'enter_red',
         exit: 'exit_red',
-        ...pedestrianStates
-      }
-    }
+        ...pedestrianStates,
+      },
+    },
   });
 
   const newPedestrianStates = {
@@ -128,23 +131,23 @@ describe('entry/exit actions', () => {
     states: {
       walk: {
         on: {
-          PED_COUNTDOWN: 'wait'
+          PED_COUNTDOWN: 'wait',
         },
         entry: 'enter_walk',
-        exit: 'exit_walk'
+        exit: 'exit_walk',
       },
       wait: {
         on: {
-          PED_COUNTDOWN: 'stop'
+          PED_COUNTDOWN: 'stop',
         },
         entry: 'enter_wait',
-        exit: 'exit_wait'
+        exit: 'exit_wait',
       },
       stop: {
         entry: ['enter_stop'],
-        exit: ['exit_stop']
-      }
-    }
+        exit: ['exit_stop'],
+      },
+    },
   };
 
   const newLightMachine = Machine({
@@ -155,30 +158,30 @@ describe('entry/exit actions', () => {
         on: {
           TIMER: 'yellow',
           POWER_OUTAGE: 'red',
-          NOTHING: 'green'
+          NOTHING: 'green',
         },
         entry: 'enter_green',
-        exit: 'exit_green'
+        exit: 'exit_green',
       },
       yellow: {
         on: {
           TIMER: 'red',
-          POWER_OUTAGE: 'red'
+          POWER_OUTAGE: 'red',
         },
         entry: 'enter_yellow',
-        exit: 'exit_yellow'
+        exit: 'exit_yellow',
       },
       red: {
         on: {
           TIMER: 'green',
           POWER_OUTAGE: 'red',
-          NOTHING: 'red'
+          NOTHING: 'red',
         },
         entry: 'enter_red',
         exit: 'exit_red',
-        ...newPedestrianStates
-      }
-    }
+        ...newPedestrianStates,
+      },
+    },
   });
 
   const parallelMachine = Machine({
@@ -189,15 +192,18 @@ describe('entry/exit actions', () => {
         states: {
           a1: {
             on: {
-              CHANGE: { target: 'a2', actions: ['do_a2', 'another_do_a2'] }
+              CHANGE: {
+                target: 'a2',
+                actions: ['do_a2', 'another_do_a2'],
+              },
             },
             entry: 'enter_a1',
-            exit: 'exit_a1'
+            exit: 'exit_a1',
           },
-          a2: { entry: 'enter_a2', exit: 'exit_a2' }
+          a2: { entry: 'enter_a2', exit: 'exit_a2' },
         },
         entry: 'enter_a',
-        exit: 'exit_a'
+        exit: 'exit_a',
       },
       b: {
         initial: 'b1',
@@ -205,14 +211,14 @@ describe('entry/exit actions', () => {
           b1: {
             on: { CHANGE: { target: 'b2', actions: 'do_b2' } },
             entry: 'enter_b1',
-            exit: 'exit_b1'
+            exit: 'exit_b1',
           },
-          b2: { entry: 'enter_b2', exit: 'exit_b2' }
+          b2: { entry: 'enter_b2', exit: 'exit_b2' },
         },
         entry: 'enter_b',
-        exit: 'exit_b'
-      }
-    }
+        exit: 'exit_b',
+      },
+    },
   });
 
   const deepMachine = Machine({
@@ -224,14 +230,14 @@ describe('entry/exit actions', () => {
           a1: {
             on: {
               NEXT: 'a2',
-              NEXT_FN: 'a3'
+              NEXT_FN: 'a3',
             },
             entry: 'enter_a1',
-            exit: 'exit_a1'
+            exit: 'exit_a1',
           },
           a2: {
             entry: 'enter_a2',
-            exit: 'exit_a2'
+            exit: 'exit_a2',
           },
           a3: {
             on: {
@@ -240,21 +246,21 @@ describe('entry/exit actions', () => {
                 actions: [
                   function do_a3_to_a2() {
                     return;
-                  }
-                ]
-              }
+                  },
+                ],
+              },
             },
             entry: function enter_a3_fn() {
               return;
             },
             exit: function exit_a3_fn() {
               return;
-            }
-          }
+            },
+          },
         },
         entry: 'enter_a',
         exit: ['exit_a', 'another_exit_a'],
-        on: { CHANGE: 'b' }
+        on: { CHANGE: 'b' },
       },
       b: {
         entry: ['enter_b', 'another_enter_b'],
@@ -263,11 +269,11 @@ describe('entry/exit actions', () => {
         states: {
           b1: {
             entry: 'enter_b1',
-            exit: 'exit_b1'
-          }
-        }
-      }
-    }
+            exit: 'exit_b1',
+          },
+        },
+      },
+    },
   });
 
   const parallelMachine2 = Machine({
@@ -275,73 +281,72 @@ describe('entry/exit actions', () => {
     states: {
       A: {
         on: {
-          'to-B': 'B'
-        }
+          'to-B': 'B',
+        },
       },
       B: {
         type: 'parallel',
         on: {
-          'to-A': 'A'
+          'to-A': 'A',
         },
         states: {
           C: {
             initial: 'C1',
             states: {
               C1: {},
-              C2: {}
-            }
+              C2: {},
+            },
           },
           D: {
             initial: 'D1',
             states: {
               D1: {
                 on: {
-                  'to-D2': 'D2'
-                }
+                  'to-D2': 'D2',
+                },
               },
               D2: {
                 entry: ['D2 Entry'],
-                exit: ['D2 Exit']
-              }
-            }
-          }
-        }
-      }
-    }
+                exit: ['D2 Exit'],
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   describe('State.actions', () => {
     it('should return the entry actions of an initial state', () => {
-      expect(lightMachine.initialState.actions.map((a) => a.type)).toEqual([
-        'enter_green'
+      expect(lightMachine.initialState.actions.map(a => a.type)).toEqual([
+        'enter_green',
       ]);
     });
 
     it('should return the entry actions of an initial state (deep)', () => {
-      expect(deepMachine.initialState.actions.map((a) => a.type)).toEqual([
+      expect(deepMachine.initialState.actions.map(a => a.type)).toEqual([
         'enter_a',
-        'enter_a1'
+        'enter_a1',
       ]);
     });
 
     it('should return the entry actions of an initial state (parallel)', () => {
-      expect(parallelMachine.initialState.actions.map((a) => a.type)).toEqual([
-        'enter_a',
-        'enter_a1',
-        'enter_b',
-        'enter_b1'
-      ]);
+      expect(
+        parallelMachine.initialState.actions.map(a => a.type),
+      ).toEqual(['enter_a', 'enter_a1', 'enter_b', 'enter_b1']);
     });
 
     it('should return the entry and exit actions of a transition', () => {
       expect(
-        lightMachine.transition('green', 'TIMER').actions.map((a) => a.type)
+        lightMachine.transition('green', 'TIMER').actions.map(a => a.type),
       ).toEqual(['exit_green', 'enter_yellow']);
     });
 
     it('should return the entry and exit actions of a deep transition', () => {
       expect(
-        lightMachine.transition('yellow', 'TIMER').actions.map((a) => a.type)
+        lightMachine
+          .transition('yellow', 'TIMER')
+          .actions.map(a => a.type),
       ).toEqual(['exit_yellow', 'enter_red', 'enter_walk']);
     });
 
@@ -349,32 +354,34 @@ describe('entry/exit actions', () => {
       expect(
         lightMachine
           .transition('red.walk', 'PED_COUNTDOWN')
-          .actions.map((a) => a.type)
+          .actions.map(a => a.type),
       ).toEqual(['exit_walk', 'enter_wait']);
     });
 
     it('should not have actions for unhandled events (shallow)', () => {
       expect(
-        lightMachine.transition('green', 'FAKE').actions.map((a) => a.type)
+        lightMachine.transition('green', 'FAKE').actions.map(a => a.type),
       ).toEqual([]);
     });
 
     it('should not have actions for unhandled events (deep)', () => {
       expect(
-        lightMachine.transition('red', 'FAKE').actions.map((a) => a.type)
+        lightMachine.transition('red', 'FAKE').actions.map(a => a.type),
       ).toEqual([]);
     });
 
     it('should exit and enter the state for self-transitions (shallow)', () => {
       expect(
-        lightMachine.transition('green', 'NOTHING').actions.map((a) => a.type)
+        lightMachine
+          .transition('green', 'NOTHING')
+          .actions.map(a => a.type),
       ).toEqual(['exit_green', 'enter_green']);
     });
 
     it('should exit and enter the state for self-transitions (deep)', () => {
       // 'red' state resolves to 'red.walk'
       expect(
-        lightMachine.transition('red', 'NOTHING').actions.map((a) => a.type)
+        lightMachine.transition('red', 'NOTHING').actions.map(a => a.type),
       ).toEqual(['exit_walk', 'exit_red', 'enter_red', 'enter_walk']);
     });
 
@@ -382,7 +389,7 @@ describe('entry/exit actions', () => {
       expect(
         parallelMachine
           .transition(parallelMachine.initialState, 'CHANGE')
-          .actions.map((a) => a.type)
+          .actions.map(a => a.type),
       ).toEqual([
         'exit_b1', // reverse document order
         'exit_a1',
@@ -390,26 +397,26 @@ describe('entry/exit actions', () => {
         'another_do_a2',
         'do_b2',
         'enter_a2',
-        'enter_b2'
+        'enter_b2',
       ]);
     });
 
     it('should return nested actions in the correct (child to parent) order', () => {
       expect(
-        deepMachine.transition('a.a1', 'CHANGE').actions.map((a) => a.type)
+        deepMachine.transition('a.a1', 'CHANGE').actions.map(a => a.type),
       ).toEqual([
         'exit_a1',
         'exit_a',
         'another_exit_a',
         'enter_b',
         'another_enter_b',
-        'enter_b1'
+        'enter_b1',
       ]);
     });
 
     it('should ignore parent state actions for same-parent substates', () => {
       expect(
-        deepMachine.transition('a.a1', 'NEXT').actions.map((a) => a.type)
+        deepMachine.transition('a.a1', 'NEXT').actions.map(a => a.type),
       ).toEqual(['exit_a1', 'enter_a2']);
     });
 
@@ -417,25 +424,27 @@ describe('entry/exit actions', () => {
       expect(
         deepMachine
           .transition(deepMachine.initialState, 'NEXT_FN')
-          .actions.map((action) => action.type)
+          .actions.map(action => action.type),
       ).toEqual(['exit_a1', 'enter_a3_fn']);
 
       expect(
         deepMachine
           .transition('a.a3', 'NEXT')
-          .actions.map((action) => action.type)
+          .actions.map(action => action.type),
       ).toEqual(['exit_a3_fn', 'do_a3_to_a2', 'enter_a2']);
     });
 
     it('should exit children of parallel state nodes', () => {
       const stateB = parallelMachine2.transition(
         parallelMachine2.initialState,
-        'to-B'
+        'to-B',
       );
       const stateD2 = parallelMachine2.transition(stateB, 'to-D2');
       const stateA = parallelMachine2.transition(stateD2, 'to-A');
 
-      expect(stateA.actions.map((action) => action.type)).toEqual(['D2 Exit']);
+      expect(stateA.actions.map(action => action.type)).toEqual([
+        'D2 Exit',
+      ]);
     });
 
     it("should reenter targeted ancestor (as it's a descendant of the transition domain)", () => {
@@ -448,12 +457,12 @@ describe('entry/exit actions', () => {
             states: {
               idle: {
                 on: {
-                  UPDATE: '#loaded'
-                }
-              }
-            }
-          }
-        }
+                  UPDATE: '#loaded',
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -467,7 +476,7 @@ describe('entry/exit actions', () => {
         'exit: loaded.idle',
         'exit: loaded',
         'enter: loaded',
-        'enter: loaded.idle'
+        'enter: loaded.idle',
       ]);
     });
 
@@ -478,15 +487,15 @@ describe('entry/exit actions', () => {
           foo: {
             on: {
               TACK: 'bar',
-              ABSOLUTE_TACK: '#machine.ping.bar'
-            }
+              ABSOLUTE_TACK: '#machine.ping.bar',
+            },
           },
           bar: {
             on: {
-              TACK: 'foo'
-            }
-          }
-        }
+              TACK: 'foo',
+            },
+          },
+        },
       };
 
       const pingPong = createMachine({
@@ -496,25 +505,27 @@ describe('entry/exit actions', () => {
           ping: {
             entry: ['entryEvent'],
             on: {
-              TICK: 'pong'
+              TICK: 'pong',
             },
-            ...fooBar
+            ...fooBar,
           },
           pong: {
             on: {
-              TICK: 'ping'
-            }
-          }
-        }
+              TICK: 'ping',
+            },
+          },
+        },
       });
 
       it('with a relative transition', () => {
-        expect(pingPong.transition('ping.foo', 'TACK').actions).toHaveLength(0);
+        expect(
+          pingPong.transition('ping.foo', 'TACK').actions,
+        ).toHaveLength(0);
       });
 
       it('with an absolute transition', () => {
         expect(
-          pingPong.transition('ping.foo', 'ABSOLUTE_TACK').actions
+          pingPong.transition('ping.foo', 'ABSOLUTE_TACK').actions,
         ).toHaveLength(0);
       });
     });
@@ -522,20 +533,24 @@ describe('entry/exit actions', () => {
 
   describe('State.actions (with entry/exit instead of onEntry/onExit)', () => {
     it('should return the entry actions of an initial state', () => {
-      expect(newLightMachine.initialState.actions.map((a) => a.type)).toEqual([
-        'enter_green'
-      ]);
+      expect(
+        newLightMachine.initialState.actions.map(a => a.type),
+      ).toEqual(['enter_green']);
     });
 
     it('should return the entry and exit actions of a transition', () => {
       expect(
-        newLightMachine.transition('green', 'TIMER').actions.map((a) => a.type)
+        newLightMachine
+          .transition('green', 'TIMER')
+          .actions.map(a => a.type),
       ).toEqual(['exit_green', 'enter_yellow']);
     });
 
     it('should return the entry and exit actions of a deep transition', () => {
       expect(
-        newLightMachine.transition('yellow', 'TIMER').actions.map((a) => a.type)
+        newLightMachine
+          .transition('yellow', 'TIMER')
+          .actions.map(a => a.type),
       ).toEqual(['exit_yellow', 'enter_red', 'enter_walk']);
     });
 
@@ -543,19 +558,21 @@ describe('entry/exit actions', () => {
       expect(
         newLightMachine
           .transition('red.walk', 'PED_COUNTDOWN')
-          .actions.map((a) => a.type)
+          .actions.map(a => a.type),
       ).toEqual(['exit_walk', 'enter_wait']);
     });
 
     it('should not have actions for unhandled events (shallow)', () => {
       expect(
-        newLightMachine.transition('green', 'FAKE').actions.map((a) => a.type)
+        newLightMachine
+          .transition('green', 'FAKE')
+          .actions.map(a => a.type),
       ).toEqual([]);
     });
 
     it('should not have actions for unhandled events (deep)', () => {
       expect(
-        newLightMachine.transition('red', 'FAKE').actions.map((a) => a.type)
+        newLightMachine.transition('red', 'FAKE').actions.map(a => a.type),
       ).toEqual([]);
     });
 
@@ -563,14 +580,16 @@ describe('entry/exit actions', () => {
       expect(
         newLightMachine
           .transition('green', 'NOTHING')
-          .actions.map((a) => a.type)
+          .actions.map(a => a.type),
       ).toEqual(['exit_green', 'enter_green']);
     });
 
     it('should exit and enter the state for self-transitions (deep)', () => {
       // 'red' state resolves to 'red.walk'
       expect(
-        newLightMachine.transition('red', 'NOTHING').actions.map((a) => a.type)
+        newLightMachine
+          .transition('red', 'NOTHING')
+          .actions.map(a => a.type),
       ).toEqual(['exit_walk', 'exit_red', 'enter_red', 'enter_walk']);
     });
 
@@ -583,20 +602,20 @@ describe('entry/exit actions', () => {
             states: {
               A1: {
                 on: {
-                  NEXT: '#sibling_descendant'
-                }
+                  NEXT: '#sibling_descendant',
+                },
               },
               A2: {
                 initial: 'A2_child',
                 states: {
                   A2_child: {
-                    id: 'sibling_descendant'
-                  }
-                }
-              }
-            }
-          }
-        }
+                    id: 'sibling_descendant',
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -607,7 +626,7 @@ describe('entry/exit actions', () => {
       expect(flushTracked()).toEqual([
         'exit: A.A1',
         'enter: A.A2',
-        'enter: A.A2.A2_child'
+        'enter: A.A2.A2_child',
       ]);
     });
 
@@ -621,22 +640,22 @@ describe('entry/exit actions', () => {
             states: {
               A1: {
                 on: {
-                  NEXT: 'A2'
-                }
+                  NEXT: 'A2',
+                },
               },
               A2: {
                 initial: 'A2_child',
                 states: {
                   A2_child: {
                     on: {
-                      NEXT: '#ancestor'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      NEXT: '#ancestor',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -652,7 +671,7 @@ describe('entry/exit actions', () => {
         'exit: A.A2',
         'exit: A',
         'enter: A',
-        'enter: A.A1'
+        'enter: A.A1',
       ]);
     });
 
@@ -665,20 +684,20 @@ describe('entry/exit actions', () => {
             on: {
               NEXT: {
                 internal: false,
-                target: '.A2'
-              }
+                target: '.A2',
+              },
             },
             states: {
               A1: {},
               A2: {
                 initial: 'A2a',
                 states: {
-                  A2a: {}
-                }
-              }
-            }
-          }
-        }
+                  A2a: {},
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -692,7 +711,7 @@ describe('entry/exit actions', () => {
         'exit: A',
         'enter: A',
         'enter: A.A2',
-        'enter: A.A2.A2a'
+        'enter: A.A2.A2a',
       ]);
     });
 
@@ -702,19 +721,19 @@ describe('entry/exit actions', () => {
         states: {
           a: {
             on: {
-              EV: 'a'
+              EV: 'a',
             },
             initial: 'a1',
             states: {
               a1: {
                 initial: 'a11',
                 states: {
-                  a11: {}
-                }
-              }
-            }
-          }
-        }
+                  a11: {},
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(m);
@@ -730,7 +749,7 @@ describe('entry/exit actions', () => {
         'exit: a',
         'enter: a',
         'enter: a.a1',
-        'enter: a.a1.a11'
+        'enter: a.a1.a11',
       ]);
     });
 
@@ -743,12 +762,12 @@ describe('entry/exit actions', () => {
             states: {
               a1: {
                 on: {
-                  EV: 'a1'
-                }
-              }
-            }
-          }
-        }
+                  EV: 'a1',
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(m);
@@ -771,17 +790,17 @@ describe('entry/exit actions', () => {
             states: {
               a1: {
                 on: {
-                  EV: 'a2'
-                }
+                  EV: 'a2',
+                },
               },
               a2: {
                 on: {
-                  EV: '#parent'
-                }
-              }
-            }
-          }
-        }
+                  EV: '#parent',
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(m);
@@ -796,7 +815,7 @@ describe('entry/exit actions', () => {
         'exit: a.a2',
         'exit: a',
         'enter: a',
-        'enter: a.a1'
+        'enter: a.a1',
       ]);
     });
 
@@ -810,17 +829,17 @@ describe('entry/exit actions', () => {
             states: {
               a1: {
                 on: {
-                  EV: '#parent'
-                }
+                  EV: '#parent',
+                },
               },
               a2: {
                 on: {
-                  EV: 'a1'
-                }
-              }
-            }
-          }
-        }
+                  EV: 'a1',
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(m);
@@ -835,7 +854,7 @@ describe('entry/exit actions', () => {
         'exit: a.a1',
         'exit: a',
         'enter: a',
-        'enter: a.a2'
+        'enter: a.a2',
       ]);
     });
   });
@@ -848,7 +867,7 @@ describe('entry/exit actions', () => {
         initial: 'start',
         states: {
           start: {
-            on: { ENTER_PARALLEL: 'p1' }
+            on: { ENTER_PARALLEL: 'p1' },
           },
           p1: {
             type: 'parallel',
@@ -858,19 +877,19 @@ describe('entry/exit actions', () => {
                 initial: 'inner',
                 states: {
                   inner: {
-                    entry: 'enter_inner'
-                  }
-                }
-              }
-            }
-          }
-        }
+                    entry: 'enter_inner',
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       expect(
         parallelMachineWithOnEntry
           .transition('start', 'ENTER_PARALLEL')
-          .actions.map((a) => a.type)
+          .actions.map(a => a.type),
       ).toEqual(['enter_p1', 'enter_inner']);
     });
 
@@ -881,7 +900,7 @@ describe('entry/exit actions', () => {
           ready: {
             type: 'parallel',
             on: {
-              FOO: '#cameraOff'
+              FOO: '#cameraOff',
             },
             states: {
               devicesInfo: {},
@@ -890,13 +909,13 @@ describe('entry/exit actions', () => {
                 states: {
                   on: {},
                   off: {
-                    id: 'cameraOff'
-                  }
-                }
-              }
-            }
-          }
-        }
+                    id: 'cameraOff',
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -914,7 +933,7 @@ describe('entry/exit actions', () => {
         'enter: ready',
         'enter: ready.devicesInfo',
         'enter: ready.camera',
-        'enter: ready.camera.off'
+        'enter: ready.camera.off',
       ]);
     });
   });
@@ -925,12 +944,12 @@ describe('entry/exit actions', () => {
         initial: 'one',
         on: {
           WHATEVER: {
-            actions: () => {}
-          }
+            actions: emptyFunction,
+          },
         },
         states: {
-          one: {}
-        }
+          one: {},
+        },
       });
 
       const flushTracked = trackEntries(parent);
@@ -943,7 +962,7 @@ describe('entry/exit actions', () => {
       expect(flushTracked()).toEqual([]);
     });
 
-    it("shouldn't exit (and reenter) state on targetless delayed transition", (done) => {
+    it("shouldn't exit (and reenter) state on targetless delayed transition", done => {
       const machine = Machine({
         initial: 'one',
         states: {
@@ -952,11 +971,11 @@ describe('entry/exit actions', () => {
               10: {
                 actions: () => {
                   // do smth
-                }
-              }
-            }
-          }
-        }
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -973,7 +992,7 @@ describe('entry/exit actions', () => {
 
   describe('when reaching a final state', () => {
     // https://github.com/statelyai/xstate/issues/1109
-    it('exit actions should be called when invoked machine reaches its final state', (done) => {
+    it('exit actions should be called when invoked machine reaches its final state', done => {
       let exitCalled = false;
       let childExitCalled = false;
       const childMachine = Machine({
@@ -986,9 +1005,9 @@ describe('entry/exit actions', () => {
             type: 'final',
             exit: () => {
               childExitCalled = true;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const parentMachine = Machine({
@@ -997,13 +1016,13 @@ describe('entry/exit actions', () => {
           active: {
             invoke: {
               src: childMachine,
-              onDone: 'finished'
-            }
+              onDone: 'finished',
+            },
           },
           finished: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       interpret(parentMachine)
@@ -1030,9 +1049,9 @@ describe('entry/exit actions', () => {
           a: {
             exit: () => {
               childExitCalled = true;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const service = interpret(machine).start();
@@ -1049,10 +1068,10 @@ describe('entry/exit actions', () => {
           a: {
             initial: 'a1',
             states: {
-              a1: {}
-            }
-          }
-        }
+              a1: {},
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -1065,7 +1084,7 @@ describe('entry/exit actions', () => {
       expect(flushTracked()).toEqual([
         'exit: a.a1',
         'exit: a',
-        'exit: __root__'
+        'exit: __root__',
       ]);
     });
 
@@ -1077,11 +1096,11 @@ describe('entry/exit actions', () => {
             on: {
               EV: {
                 // just a noop action to ensure that a transition is selected when we send an event
-                actions: () => {}
-              }
-            }
-          }
-        }
+                actions: emptyFunction,
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -1108,19 +1127,19 @@ describe('entry/exit actions', () => {
                 on: {
                   EV: {
                     // just a noop action to ensure that a transition is selected when we send an event
-                    actions: () => {}
-                  }
-                }
-              }
-            }
+                    actions: emptyFunction,
+                  },
+                },
+              },
+            },
           },
           b: {
             initial: 'child_b',
             states: {
-              child_b: {}
-            }
-          }
-        }
+              child_b: {},
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -1138,7 +1157,7 @@ describe('entry/exit actions', () => {
         'exit: b',
         'exit: a.child_a',
         'exit: a',
-        'exit: __root__'
+        'exit: __root__',
       ]);
     });
 
@@ -1149,8 +1168,8 @@ describe('entry/exit actions', () => {
           a: {
             initial: 'child_a',
             states: {
-              child_a: {}
-            }
+              child_a: {},
+            },
           },
           b: {
             initial: 'child_b',
@@ -1159,13 +1178,13 @@ describe('entry/exit actions', () => {
                 on: {
                   EV: {
                     // just a noop action to ensure that a transition is selected when we send an event
-                    actions: () => {}
-                  }
-                }
-              }
-            }
-          }
-        }
+                    actions: emptyFunction,
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -1183,7 +1202,7 @@ describe('entry/exit actions', () => {
         'exit: b',
         'exit: a.child_a',
         'exit: a',
-        'exit: __root__'
+        'exit: __root__',
       ]);
     });
 
@@ -1198,11 +1217,11 @@ describe('entry/exit actions', () => {
                 on: {
                   EV: {
                     // just a noop action to ensure that a transition is selected when we send an event
-                    actions: () => {}
-                  }
-                }
-              }
-            }
+                    actions: emptyFunction,
+                  },
+                },
+              },
+            },
           },
           b: {
             initial: 'child_b',
@@ -1211,13 +1230,13 @@ describe('entry/exit actions', () => {
                 on: {
                   EV: {
                     // just a noop action to ensure that a transition is selected when we send an event
-                    actions: () => {}
-                  }
-                }
-              }
-            }
-          }
-        }
+                    actions: emptyFunction,
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       const flushTracked = trackEntries(machine);
@@ -1234,7 +1253,7 @@ describe('entry/exit actions', () => {
         'exit: b',
         'exit: a.child_a',
         'exit: a',
-        'exit: __root__'
+        'exit: __root__',
       ]);
     });
 
@@ -1243,7 +1262,7 @@ describe('entry/exit actions', () => {
       const machine = createMachine({
         exit: (_ctx, ev) => {
           receivedEvent = ev;
-        }
+        },
       });
 
       const service = interpret(machine).start();
@@ -1259,16 +1278,16 @@ describe('entry/exit actions', () => {
         states: {
           a: {
             on: {
-              NEXT: 'b'
-            }
+              NEXT: 'b',
+            },
           },
           b: {
-            type: 'final'
-          }
+            type: 'final',
+          },
         },
         exit: (_ctx, ev) => {
           receivedEvent = ev;
-        }
+        },
       });
 
       const service = interpret(machine).start();
@@ -1284,14 +1303,14 @@ describe('entry/exit actions', () => {
         initial: 'idle',
         states: {
           idle: {
-            exit: sendParent('EXIT')
-          }
-        }
+            exit: sendParent('EXIT'),
+          },
+        },
       });
 
       const parent = createMachine({
         id: 'parent',
-        invoke: child
+        invoke: child,
       });
 
       const interpreter = interpret(parent);
@@ -1306,26 +1325,26 @@ describe('entry/exit actions', () => {
         initial: 'idle',
         states: {
           idle: {
-            exit: sendParent('EXIT')
-          }
-        }
+            exit: sendParent('EXIT'),
+          },
+        },
       });
 
       const parent = createMachine({
         id: 'parent',
         context: () => ({
-          child: spawn(child)
+          child: spawn(child),
         }),
         on: {
           STOP_CHILD: {
-            actions: stop((ctx: any) => ctx.child)
+            actions: stop((ctx: any) => ctx.child),
           },
           EXIT: {
             actions: () => {
               throw new Error('This should not be called.');
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const interpreter = interpret(parent).start();
@@ -1341,31 +1360,34 @@ describe('entry/exit actions', () => {
         states: {
           active: {
             on: {
-              FINISH: 'done'
-            }
+              FINISH: 'done',
+            },
           },
           done: {
-            type: 'final'
-          }
+            type: 'final',
+          },
         },
-        exit: sendParent('CHILD_DONE')
+        exit: sendParent('CHILD_DONE'),
       });
 
       const parent = createMachine({
         id: 'parent',
         context: () => ({
-          child: spawn(child)
+          child: spawn(child),
         }),
         on: {
           FINISH_CHILD: {
-            actions: send({ type: 'FINISH' }, { to: (ctx: any) => ctx.child })
+            actions: send(
+              { type: 'FINISH' },
+              { to: (ctx: any) => ctx.child },
+            ),
           },
           CHILD_DONE: {
             actions: () => {
               eventReceived = true;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const interpreter = interpret(parent).start();
@@ -1383,18 +1405,18 @@ describe('entry/exit actions', () => {
           STOPPED: {
             actions: () => {
               eventReceived = true;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const child = createMachine({
         id: 'child',
         invoke: {
           id: 'myChild',
-          src: grandchild
+          src: grandchild,
         },
-        exit: send({ type: 'STOPPED' }, { to: 'myChild' })
+        exit: send({ type: 'STOPPED' }, { to: 'myChild' }),
       });
 
       const parent = createMachine({
@@ -1403,14 +1425,14 @@ describe('entry/exit actions', () => {
         states: {
           a: {
             invoke: {
-              src: child
+              src: child,
             },
             on: {
-              NEXT: 'b'
-            }
+              NEXT: 'b',
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       const interpreter = interpret(parent).start();
@@ -1428,9 +1450,9 @@ describe('entry/exit actions', () => {
           STOPPED: {
             actions: () => {
               eventReceived = true;
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const child = createMachine({
@@ -1438,32 +1460,32 @@ describe('entry/exit actions', () => {
         initial: 'a',
         invoke: {
           id: 'myChild',
-          src: grandchild
+          src: grandchild,
         },
         states: {
           a: {
             on: {
-              FINISH: 'b'
-            }
+              FINISH: 'b',
+            },
           },
           b: {
-            type: 'final'
-          }
+            type: 'final',
+          },
         },
-        exit: send({ type: 'STOPPED' }, { to: 'myChild' })
+        exit: send({ type: 'STOPPED' }, { to: 'myChild' }),
       });
 
       const parent = createMachine({
         id: 'parent',
         invoke: {
           id: 'myChild',
-          src: child
+          src: child,
         },
         on: {
           NEXT: {
-            actions: send({ type: 'FINISH' }, { to: 'myChild' })
-          }
-        }
+            actions: send({ type: 'FINISH' }, { to: 'myChild' }),
+          },
+        },
       });
 
       const interpreter = interpret(parent).start();
@@ -1477,15 +1499,15 @@ describe('entry/exit actions', () => {
         id: 'grandchild',
         entry: () => {
           throw new Error('This should not be called.');
-        }
+        },
       });
 
       const parent = createMachine({
         id: 'parent',
         context: {},
         exit: assign({
-          actorRef: () => spawn(grandchild)
-        })
+          actorRef: () => spawn(grandchild),
+        }),
       });
 
       const interpreter = interpret(parent).start();
@@ -1498,15 +1520,15 @@ describe('entry/exit actions', () => {
         {
           id: 'parent',
           context: {},
-          exit: 'referencedAction'
+          exit: 'referencedAction',
         },
         {
           actions: {
             referencedAction: () => {
               called = true;
-            }
-          }
-        }
+            },
+          },
+        },
       );
 
       const interpreter = interpret(parent).start();
@@ -1519,22 +1541,28 @@ describe('entry/exit actions', () => {
       const machine = createMachine(
         {
           context: {
-            executedAssigns: [] as string[]
+            executedAssigns: [] as string[],
           },
           exit: [
             'referencedAction',
             assign({
-              executedAssigns: (ctx: any) => [...ctx.executedAssigns, 'inline']
-            })
-          ]
+              executedAssigns: (ctx: any) => [
+                ...ctx.executedAssigns,
+                'inline',
+              ],
+            }),
+          ],
         },
         {
           actions: {
             referencedAction: assign({
-              executedAssigns: (ctx) => [...ctx.executedAssigns, 'referenced']
-            })
-          }
-        }
+              executedAssigns: ctx => [
+                ...ctx.executedAssigns,
+                'referenced',
+              ],
+            }),
+          },
+        },
       );
 
       const interpreter = interpret(machine).start();
@@ -1542,7 +1570,7 @@ describe('entry/exit actions', () => {
 
       expect(interpreter.state.context.executedAssigns).toEqual([
         'referenced',
-        'inline'
+        'inline',
       ]);
     });
 
@@ -1556,14 +1584,14 @@ describe('entry/exit actions', () => {
               service.send({ type: 'SOME_EVENT' });
               // but also immediately stop *while* the `INITIALIZE_SYNC_SEQUENCE` is still being processed
               service.stop();
-            }
+            },
           },
           SOME_EVENT: {
             actions: () => {
               throw new Error('This should not be called.');
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const service = interpret(machine).start();
@@ -1588,17 +1616,17 @@ describe('entry/exit actions', () => {
                     // immediately stop *while* the `INITIALIZE_SYNC_SEQUENCE` is still being processed
                     service.stop();
                   },
-                  () => {}
-                ]
-              }
-            }
+                  emptyFunction,
+                ],
+              },
+            },
           },
           bar: {
             exit: () => {
               exitActions.push('bar action');
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const service = interpret(machine).start();
@@ -1627,17 +1655,17 @@ describe('entry/exit actions', () => {
                   },
                   () => {
                     executedActions.push('foo transition action');
-                  }
-                ]
-              }
-            }
+                  },
+                ],
+              },
+            },
           },
           bar: {
             exit: () => {
               executedActions.push('bar exit action');
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       const service = interpret(machine).start();
@@ -1647,7 +1675,7 @@ describe('entry/exit actions', () => {
       expect(executedActions).toEqual([
         'foo exit action',
         'foo transition action',
-        'bar exit action'
+        'bar exit action',
       ]);
     });
   });
@@ -1661,19 +1689,19 @@ describe('actions on invalid transition', () => {
         on: {
           STOP: {
             target: 'stop',
-            actions: ['action1']
-          }
-        }
+            actions: ['action1'],
+          },
+        },
       },
-      stop: {}
-    }
+      stop: {},
+    },
   });
 
   it('should not recall previous actions', () => {
     const nextState = stopMachine.transition('idle', 'STOP');
-    expect(stopMachine.transition(nextState, 'INVALID').actions).toHaveLength(
-      0
-    );
+    expect(
+      stopMachine.transition(nextState, 'INVALID').actions,
+    ).toHaveLength(0);
   });
 });
 
@@ -1688,66 +1716,69 @@ describe('actions config', () => {
   }
   interface State {
     states: {
-      a: {};
-      b: {};
+      a: object;
+      b: object;
     };
   }
 
   // tslint:disable-next-line:no-empty
-  const definedAction = () => {};
+  const definedAction = emptyFunction;
   const simpleMachine = Machine<Context, State, EventType>(
     {
       initial: 'a',
       context: {
-        count: 0
+        count: 0,
       },
       states: {
         a: {
           entry: [
             'definedAction',
             { type: 'definedAction' },
-            'undefinedAction'
+            'undefinedAction',
           ],
           on: {
             EVENT: {
               target: 'b',
-              actions: [{ type: 'definedAction' }, { type: 'updateContext' }]
-            }
-          }
+              actions: [
+                { type: 'definedAction' },
+                { type: 'updateContext' },
+              ],
+            },
+          },
         },
-        b: {}
+        b: {},
       },
       on: {
-        E: 'a'
-      }
+        E: 'a',
+      },
     },
     {
       actions: {
         definedAction,
-        updateContext: assign({ count: 10 })
-      }
-    }
+        updateContext: assign({ count: 10 }),
+      },
+    },
   );
   it('should reference actions defined in actions parameter of machine options', () => {
     const { initialState } = simpleMachine;
     const nextState = simpleMachine.transition(initialState, 'E');
 
-    expect(nextState.actions.map((a) => a.type)).toEqual(
-      expect.arrayContaining(['definedAction', 'undefinedAction'])
+    expect(nextState.actions.map(a => a.type)).toEqual(
+      expect.arrayContaining(['definedAction', 'undefinedAction']),
     );
 
     expect(nextState.actions).toEqual([
       expect.objectContaining({ type: 'definedAction' }),
       expect.objectContaining({ type: 'definedAction' }),
-      expect.objectContaining({ type: 'undefinedAction' })
+      expect.objectContaining({ type: 'undefinedAction' }),
     ]);
   });
 
   it('should reference actions defined in actions parameter of machine options (initial state)', () => {
     const { initialState } = simpleMachine;
 
-    expect(initialState.actions.map((a) => a.type)).toEqual(
-      expect.arrayContaining(['definedAction', 'undefinedAction'])
+    expect(initialState.actions.map(a => a.type)).toEqual(
+      expect.arrayContaining(['definedAction', 'undefinedAction']),
     );
   });
 
@@ -1755,7 +1786,7 @@ describe('actions config', () => {
     const state = simpleMachine.transition('a', 'EVENT');
 
     expect(state.actions).toEqual([
-      expect.objectContaining({ type: 'definedAction' })
+      expect.objectContaining({ type: 'definedAction' }),
     ]);
 
     expect(state.context).toEqual({ count: 10 });
@@ -1776,17 +1807,17 @@ describe('actions config', () => {
           on: {
             EVENT: {
               target: 'inactive',
-              actions: [() => (actionCalled = true)]
-            }
-          }
+              actions: [() => (actionCalled = true)],
+            },
+          },
         },
-        inactive: {}
-      }
+        inactive: {},
+      },
     });
 
     const { initialState } = anonMachine;
 
-    initialState.actions.forEach((action) => {
+    initialState.actions.forEach(action => {
       if (action.exec) {
         action.exec(
           initialState.context,
@@ -1794,8 +1825,8 @@ describe('actions config', () => {
           {
             action: action as any,
             state: initialState,
-            _event: initialState._event
-          }
+            _event: initialState._event,
+          },
         );
       }
     });
@@ -1806,7 +1837,7 @@ describe('actions config', () => {
 
     expect(inactiveState.actions.length).toBe(2);
 
-    inactiveState.actions.forEach((action) => {
+    inactiveState.actions.forEach(action => {
       if (action.exec) {
         action.exec(
           inactiveState.context,
@@ -1814,8 +1845,8 @@ describe('actions config', () => {
           {
             action: action as any,
             state: initialState,
-            _event: initialState._event
-          }
+            _event: initialState._event,
+          },
         );
       }
     });
@@ -1826,7 +1857,7 @@ describe('actions config', () => {
 });
 
 describe('action meta', () => {
-  it('should provide the original action and state to the exec function', (done) => {
+  it('should provide the original action and state to the exec function', done => {
     const testMachine = Machine(
       {
         id: 'test',
@@ -1835,10 +1866,10 @@ describe('action meta', () => {
           foo: {
             entry: {
               type: 'entryAction',
-              value: 'something'
-            }
-          }
-        }
+              value: 'something',
+            },
+          },
+        },
       },
       {
         actions: {
@@ -1847,9 +1878,9 @@ describe('action meta', () => {
             expect(meta.action.type).toEqual('entryAction');
             expect(meta.action.value).toEqual('something');
             done();
-          }
-        }
-      }
+          },
+        },
+      },
     );
 
     interpret(testMachine).start();
@@ -1870,7 +1901,7 @@ describe('purely defined actions', () => {
     id: 'dynamic',
     initial: 'idle',
     context: {
-      items: [{ id: 1 }, { id: 2 }, { id: 3 }]
+      items: [{ id: 1 }, { id: 2 }, { id: 3 }],
     },
     states: {
       idle: {
@@ -1881,10 +1912,10 @@ describe('purely defined actions', () => {
                 return {
                   type: 'SINGLE_EVENT',
                   length: ctx.items.length,
-                  id: e.id
+                  id: e.id,
                 };
               }
-            })
+            }),
           },
           NONE: {
             actions: pure<any, any>((ctx, e) => {
@@ -1892,48 +1923,54 @@ describe('purely defined actions', () => {
                 return {
                   type: 'SINGLE_EVENT',
                   length: ctx.items.length,
-                  id: e.id
+                  id: e.id,
                 };
               }
-            })
+            }),
           },
           EACH: {
-            actions: pure<any, any>((ctx) =>
+            actions: pure<any, any>(ctx =>
               ctx.items.map((item: any, index: number) => ({
                 type: 'EVENT',
                 item,
-                index
-              }))
-            )
+                index,
+              })),
+            ),
           },
           AS_STRINGS: {
-            actions: pure<any, any>(() => ['SOME_ACTION'])
-          }
-        }
-      }
-    }
+            actions: pure<any, any>(() => ['SOME_ACTION']),
+          },
+        },
+      },
+    },
   });
 
   it('should allow for a purely defined dynamic action', () => {
-    const nextState = dynamicMachine.transition(dynamicMachine.initialState, {
-      type: 'SINGLE',
-      id: 3
-    });
+    const nextState = dynamicMachine.transition(
+      dynamicMachine.initialState,
+      {
+        type: 'SINGLE',
+        id: 3,
+      },
+    );
 
     expect(nextState.actions).toEqual([
       {
         type: 'SINGLE_EVENT',
         length: 3,
-        id: 3
-      }
+        id: 3,
+      },
     ]);
   });
 
   it('should allow for purely defined lack of actions', () => {
-    const nextState = dynamicMachine.transition(dynamicMachine.initialState, {
-      type: 'NONE',
-      id: 3
-    });
+    const nextState = dynamicMachine.transition(
+      dynamicMachine.initialState,
+      {
+        type: 'NONE',
+        id: 3,
+      },
+    );
 
     expect(nextState.actions).toEqual([]);
   });
@@ -1941,32 +1978,32 @@ describe('purely defined actions', () => {
   it('should allow for purely defined dynamic actions', () => {
     const nextState = dynamicMachine.transition(
       dynamicMachine.initialState,
-      'EACH'
+      'EACH',
     );
 
     expect(nextState.actions).toEqual([
       {
         type: 'EVENT',
         item: { id: 1 },
-        index: 0
+        index: 0,
       },
       {
         type: 'EVENT',
         item: { id: 2 },
-        index: 1
+        index: 1,
       },
       {
         type: 'EVENT',
         item: { id: 3 },
-        index: 2
-      }
+        index: 2,
+      },
     ]);
   });
 
   it('should allow for purely defined action type strings', () => {
     const nextState = dynamicMachine.transition(
       dynamicMachine.initialState,
-      'AS_STRINGS'
+      'AS_STRINGS',
     );
 
     expect(nextState.actions).toEqual([{ type: 'SOME_ACTION' }]);
@@ -1974,7 +2011,7 @@ describe('purely defined actions', () => {
 });
 
 describe('forwardTo()', () => {
-  it('should forward an event to a service', (done) => {
+  it('should forward an event to a service', done => {
     const child = Machine<void, { type: 'EVENT'; value: number }>({
       id: 'child',
       initial: 'active',
@@ -1983,11 +2020,11 @@ describe('forwardTo()', () => {
           on: {
             EVENT: {
               actions: sendParent('SUCCESS'),
-              cond: (_, e) => e.value === 42
-            }
-          }
-        }
-      }
+              cond: (_, e) => e.value === 42,
+            },
+          },
+        },
+      },
     });
 
     const parent = Machine({
@@ -1998,15 +2035,15 @@ describe('forwardTo()', () => {
           invoke: { src: child, id: 'myChild' },
           on: {
             EVENT: {
-              actions: forwardTo('myChild')
+              actions: forwardTo('myChild'),
             },
-            SUCCESS: 'last'
-          }
+            SUCCESS: 'last',
+          },
         },
         last: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(parent)
@@ -2016,7 +2053,7 @@ describe('forwardTo()', () => {
     service.send('EVENT', { value: 42 });
   });
 
-  it('should forward an event to a service (dynamic)', (done) => {
+  it('should forward an event to a service (dynamic)', done => {
     const child = Machine<void, { type: 'EVENT'; value: number }>({
       id: 'child',
       initial: 'active',
@@ -2025,35 +2062,35 @@ describe('forwardTo()', () => {
           on: {
             EVENT: {
               actions: sendParent('SUCCESS'),
-              cond: (_, e) => e.value === 42
-            }
-          }
-        }
-      }
+              cond: (_, e) => e.value === 42,
+            },
+          },
+        },
+      },
     });
 
     const parent = Machine<{ child: any }>({
       id: 'parent',
       initial: 'first',
       context: {
-        child: null
+        child: null,
       },
       states: {
         first: {
           entry: assign({
-            child: () => spawn(child)
+            child: () => spawn(child),
           }),
           on: {
             EVENT: {
-              actions: forwardTo((ctx) => ctx.child)
+              actions: forwardTo(ctx => ctx.child),
             },
-            SUCCESS: 'last'
-          }
+            SUCCESS: 'last',
+          },
         },
         last: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(parent)
@@ -2066,14 +2103,14 @@ describe('forwardTo()', () => {
   it('should not cause an infinite loop when forwarding to undefined', () => {
     const machine = createMachine({
       on: {
-        '*': { cond: () => true, actions: forwardTo(undefined as any) }
-      }
+        '*': { cond: () => true, actions: forwardTo(undefined as any) },
+      },
     });
 
     const service = interpret(machine).start();
 
     expect(() => service.send('TEST')).toThrowErrorMatchingInlineSnapshot(
-      `"Attempted to forward event to undefined actor. This risks an infinite loop in the sender."`
+      `"Attempted to forward event to undefined actor. This risks an infinite loop in the sender."`,
     );
   });
 });
@@ -2083,18 +2120,18 @@ describe('log()', () => {
     id: 'log',
     initial: 'string',
     context: {
-      count: 42
+      count: 42,
     },
     states: {
       string: {
         entry: log('some string', 'string label'),
         on: {
           EXPR: {
-            actions: log((ctx) => `expr ${ctx.count}`, 'expr label')
-          }
-        }
-      }
-    }
+            actions: log(ctx => `expr ${ctx.count}`, 'expr label'),
+          },
+        },
+      },
+    },
   });
 
   it('should log a string', () => {
@@ -2109,7 +2146,10 @@ describe('log()', () => {
   });
 
   it('should log an expression', () => {
-    const nextState = logMachine.transition(logMachine.initialState, 'EXPR');
+    const nextState = logMachine.transition(
+      logMachine.initialState,
+      'EXPR',
+    );
     expect(nextState.actions[0]).toMatchInlineSnapshot(`
       Object {
         "expr": [Function],
@@ -2133,10 +2173,10 @@ describe('choose', () => {
       states: {
         foo: {
           entry: choose([
-            { cond: () => true, actions: assign<Ctx>({ answer: 42 }) }
-          ])
-        }
-      }
+            { cond: () => true, actions: assign<Ctx>({ answer: 42 }) },
+          ]),
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2159,11 +2199,14 @@ describe('choose', () => {
           entry: choose([
             {
               cond: () => true,
-              actions: [() => (executed = true), assign<Ctx>({ answer: 42 })]
-            }
-          ])
-        }
-      }
+              actions: [
+                () => (executed = true),
+                assign<Ctx>({ answer: 42 }),
+              ],
+            },
+          ]),
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2186,12 +2229,12 @@ describe('choose', () => {
           entry: choose([
             {
               cond: () => false,
-              actions: assign<Ctx>({ shouldNotAppear: true })
+              actions: assign<Ctx>({ shouldNotAppear: true }),
             },
-            { cond: () => true, actions: assign<Ctx>({ answer: 42 }) }
-          ])
-        }
-      }
+            { cond: () => true, actions: assign<Ctx>({ answer: 42 }) },
+          ]),
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2213,12 +2256,12 @@ describe('choose', () => {
           entry: choose([
             {
               cond: () => false,
-              actions: assign<Ctx>({ shouldNotAppear: true })
+              actions: assign<Ctx>({ shouldNotAppear: true }),
             },
-            { actions: assign<Ctx>({ answer: 42 }) }
-          ])
-        }
-      }
+            { actions: assign<Ctx>({ answer: 42 }) },
+          ]),
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2237,7 +2280,7 @@ describe('choose', () => {
       context: {
         firstLevel: false,
         secondLevel: false,
-        thirdLevel: false
+        thirdLevel: false,
       },
       initial: 'foo',
       states: {
@@ -2255,17 +2298,17 @@ describe('choose', () => {
                       choose([
                         {
                           cond: () => true,
-                          actions: [assign<Ctx>({ thirdLevel: true })]
-                        }
-                      ])
-                    ]
-                  }
-                ])
-              ]
-            }
-          ])
-        }
-      }
+                          actions: [assign<Ctx>({ thirdLevel: true })],
+                        },
+                      ]),
+                    ],
+                  },
+                ]),
+              ],
+            },
+          ]),
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2273,7 +2316,7 @@ describe('choose', () => {
     expect(service.state.context).toEqual({
       firstLevel: true,
       secondLevel: true,
-      thirdLevel: true
+      thirdLevel: true,
     });
   });
 
@@ -2284,19 +2327,19 @@ describe('choose', () => {
     }
     const machine = createMachine<Ctx>({
       context: {
-        counter: 101
+        counter: 101,
       },
       initial: 'foo',
       states: {
         foo: {
           entry: choose([
             {
-              cond: (ctx) => ctx.counter > 100,
-              actions: assign<Ctx>({ answer: 42 })
-            }
-          ])
-        }
-      }
+              cond: ctx => ctx.counter > 100,
+              actions: assign<Ctx>({ answer: 42 }),
+            },
+          ]),
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2324,14 +2367,14 @@ describe('choose', () => {
               actions: choose<Ctx, Events>([
                 {
                   cond: (_, event) => event.counter > 100,
-                  actions: assign<Ctx, Events>({ answer: 42 })
-                }
-              ])
-            }
-          }
+                  actions: assign<Ctx, Events>({ answer: 42 }),
+                },
+              ]),
+            },
+          },
         },
-        bar: {}
-      }
+        bar: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -2343,7 +2386,7 @@ describe('choose', () => {
     type Ctx = { counter: number; answer?: number };
     const machine = createMachine<Ctx>({
       context: {
-        counter: 101
+        counter: 101,
       },
       type: 'parallel',
       states: {
@@ -2352,21 +2395,21 @@ describe('choose', () => {
           states: {
             waiting: {
               on: {
-                GIVE_ANSWER: 'answering'
-              }
+                GIVE_ANSWER: 'answering',
+              },
             },
             answering: {
               entry: choose([
                 {
                   cond: (_, __, { state }) => state.matches('bar'),
-                  actions: assign<Ctx>({ answer: 42 })
-                }
-              ])
-            }
-          }
+                  actions: assign<Ctx>({ answer: 42 }),
+                },
+              ]),
+            },
+          },
         },
-        bar: {}
-      }
+        bar: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -2386,18 +2429,20 @@ describe('choose', () => {
         initial: 'foo',
         states: {
           foo: {
-            entry: choose([{ cond: 'worstGuard', actions: 'revealAnswer' }])
-          }
-        }
+            entry: choose([
+              { cond: 'worstGuard', actions: 'revealAnswer' },
+            ]),
+          },
+        },
       },
       {
         guards: {
-          worstGuard: () => true
+          worstGuard: () => true,
         },
         actions: {
-          revealAnswer: assign<Ctx>({ answer: 42 })
-        }
-      }
+          revealAnswer: assign<Ctx>({ answer: 42 }),
+        },
+      },
     );
 
     const service = interpret(machine).start();
@@ -2416,21 +2461,21 @@ describe('choose', () => {
         initial: 'foo',
         states: {
           foo: {
-            entry: 'conditionallyRevealAnswer'
-          }
-        }
+            entry: 'conditionallyRevealAnswer',
+          },
+        },
       },
       {
         guards: {
-          worstGuard: () => true
+          worstGuard: () => true,
         },
         actions: {
           revealAnswer: assign<Ctx>({ answer: 42 }),
           conditionallyRevealAnswer: choose([
-            { cond: 'worstGuard', actions: 'revealAnswer' }
-          ])
-        }
-      }
+            { cond: 'worstGuard', actions: 'revealAnswer' },
+          ]),
+        },
+      },
     );
 
     const service = interpret(machine).start();
@@ -2442,20 +2487,19 @@ describe('choose', () => {
 describe('sendParent', () => {
   // https://github.com/statelyai/xstate/issues/711
   it('TS: should compile for any event', () => {
-    interface ChildContext {}
     interface ChildEvent {
       type: 'CHILD';
     }
 
-    const child = Machine<ChildContext, any, ChildEvent>({
+    const child = Machine<object, any, ChildEvent>({
       id: 'child',
       initial: 'start',
       states: {
         start: {
           // This should not be a TypeScript error
-          entry: [sendParent({ type: 'PARENT' })]
-        }
-      }
+          entry: [sendParent({ type: 'PARENT' })],
+        },
+      },
     });
 
     expect(child).toBeTruthy();
@@ -2463,45 +2507,48 @@ describe('sendParent', () => {
 });
 
 describe('sendTo', () => {
-  it('should be able to send an event to an actor', (done) => {
+  it('should be able to send an event to an actor', done => {
     const childMachine = createMachine<any, { type: 'EVENT' }>({
       initial: 'waiting',
       states: {
         waiting: {
           on: {
             EVENT: {
-              actions: () => done()
-            }
-          }
-        }
-      }
+              actions: () => done(),
+            },
+          },
+        },
+      },
     });
 
     const parentMachine = createMachine<{
       child: ActorRefFrom<typeof childMachine>;
     }>({
       context: () => ({
-        child: spawn(childMachine)
+        child: spawn(childMachine),
       }),
-      entry: sendTo((ctx) => ctx.child, { type: 'EVENT' })
+      entry: sendTo(ctx => ctx.child, { type: 'EVENT' }),
     });
 
     interpret(parentMachine).start();
   });
 
-  it('should be able to send an event from expression to an actor', (done) => {
-    const childMachine = createMachine<any, { type: 'EVENT'; count: number }>({
+  it('should be able to send an event from expression to an actor', done => {
+    const childMachine = createMachine<
+      any,
+      { type: 'EVENT'; count: number }
+    >({
       initial: 'waiting',
       states: {
         waiting: {
           on: {
             EVENT: {
               cond: (_, e) => e.count === 42,
-              actions: () => done()
-            }
-          }
-        }
-      }
+              actions: () => done(),
+            },
+          },
+        },
+      },
     });
 
     const parentMachine = createMachine<{
@@ -2510,12 +2557,12 @@ describe('sendTo', () => {
     }>({
       context: () => ({
         child: spawn(childMachine),
-        count: 42
+        count: 42,
       }),
       entry: sendTo(
-        (ctx) => ctx.child,
-        (ctx) => ({ type: 'EVENT', count: ctx.count })
-      )
+        ctx => ctx.child,
+        ctx => ({ type: 'EVENT', count: ctx.count }),
+      ),
     });
 
     interpret(parentMachine).start();
@@ -2527,80 +2574,80 @@ describe('sendTo', () => {
       states: {
         waiting: {
           on: {
-            EVENT: {}
-          }
-        }
-      }
+            EVENT: {},
+          },
+        },
+      },
     });
 
     createMachine<{
       child: ActorRefFrom<typeof childMachine>;
     }>({
       context: () => ({
-        child: spawn(childMachine)
+        child: spawn(childMachine),
       }),
-      entry: sendTo((ctx) => ctx.child, {
-        // @ts-expect-error
-        type: 'UNKNOWN'
-      })
+      entry: sendTo(ctx => ctx.child, {
+        // @ts-expect-error: wanted
+        type: 'UNKNOWN',
+      }),
     });
   });
 
-  it('should be able to send an event to a named actor', (done) => {
+  it('should be able to send an event to a named actor', done => {
     const childMachine = createMachine<any, { type: 'EVENT' }>({
       initial: 'waiting',
       states: {
         waiting: {
           on: {
             EVENT: {
-              actions: () => done()
-            }
-          }
-        }
-      }
+              actions: () => done(),
+            },
+          },
+        },
+      },
     });
 
     const parentMachine = createMachine<{
       child: ActorRefFrom<typeof childMachine>;
     }>({
       context: () => ({
-        child: spawn(childMachine, 'child')
+        child: spawn(childMachine, 'child'),
       }),
       // No type-safety for the event yet
-      entry: sendTo('child', { type: 'EVENT' })
+      entry: sendTo('child', { type: 'EVENT' }),
     });
 
     interpret(parentMachine).start();
   });
 
-  it('should be able to send an event directly to an ActorRef', (done) => {
+  it('should be able to send an event directly to an ActorRef', done => {
     const childMachine = createMachine<any, { type: 'EVENT' }>({
       initial: 'waiting',
       states: {
         waiting: {
           on: {
             EVENT: {
-              actions: () => done()
-            }
-          }
-        }
-      }
+              actions: () => done(),
+            },
+          },
+        },
+      },
     });
 
     const parentMachine = createMachine<{
       child: ActorRefFrom<typeof childMachine>;
     }>({
       context: () => ({
-        child: spawn(childMachine)
+        child: spawn(childMachine),
       }),
       entry: pure<
         {
           child: ActorRefFrom<typeof childMachine>;
         },
         any
-      >((ctx) => {
+      >(ctx => {
         return [sendTo(ctx.child, { type: 'EVENT' })];
-      })
+      }),
     });
 
     interpret(parentMachine).start();
@@ -2612,20 +2659,20 @@ describe('sendTo', () => {
       initial: 'a',
       context: () => ({
         foo: spawn((_, receive) => {
-          receive((event) => {
+          receive(event => {
             expect(event).toEqual({ type: 'EVENT' });
           });
-        })
+        }),
       }),
       states: {
         a: {
           on: {
             EVENT: {
-              actions: sendTo((ctx, e) => ctx[e.value], { type: 'EVENT' })
-            }
-          }
-        }
-      }
+              actions: sendTo((ctx, e) => ctx[e.value], { type: 'EVENT' }),
+            },
+          },
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2635,7 +2682,7 @@ describe('sendTo', () => {
 });
 
 describe('raise', () => {
-  it('should be able to send a delayed event to itself', (done) => {
+  it('should be able to send a delayed event to itself', done => {
     const machine = createMachine({
       initial: 'a',
       states: {
@@ -2643,22 +2690,22 @@ describe('raise', () => {
           entry: raise(
             { type: 'EVENT' },
             {
-              delay: 1
-            }
+              delay: 1,
+            },
           ),
           on: {
-            TO_B: 'b'
-          }
+            TO_B: 'b',
+          },
         },
         b: {
           on: {
-            EVENT: 'c'
-          }
+            EVENT: 'c',
+          },
         },
         c: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2669,7 +2716,7 @@ describe('raise', () => {
     service.send({ type: 'TO_B' });
   });
 
-  it('should be able to send a delayed event to itself with delay = 0', (done) => {
+  it('should be able to send a delayed event to itself with delay = 0', done => {
     const machine = createMachine({
       initial: 'a',
       states: {
@@ -2677,15 +2724,15 @@ describe('raise', () => {
           entry: raise(
             { type: 'EVENT' },
             {
-              delay: 0
-            }
+              delay: 0,
+            },
           ),
           on: {
-            EVENT: 'b'
-          }
+            EVENT: 'b',
+          },
         },
-        b: {}
-      }
+        b: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -2708,13 +2755,13 @@ describe('raise', () => {
         a: {
           entry: raise({ type: 'TO_B' }),
           on: {
-            TO_B: 'b'
-          }
+            TO_B: 'b',
+          },
         },
         b: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2722,7 +2769,7 @@ describe('raise', () => {
     expect(service.getSnapshot().value).toEqual('b');
   });
 
-  it('should be able to raise a delayed event and respond to it in the same state', (done) => {
+  it('should be able to raise a delayed event and respond to it in the same state', done => {
     const machine = createMachine({
       initial: 'a',
       states: {
@@ -2730,17 +2777,17 @@ describe('raise', () => {
           entry: raise(
             { type: 'TO_B' },
             {
-              delay: 100
-            }
+              delay: 100,
+            },
           ),
           on: {
-            TO_B: 'b'
-          }
+            TO_B: 'b',
+          },
         },
         b: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -2760,13 +2807,13 @@ describe('raise', () => {
         a: {
           on: {
             NEXT: {
-              actions: raise(() => ({ type: 'RAISED' }))
+              actions: raise(() => ({ type: 'RAISED' })),
             },
-            RAISED: 'b'
-          }
+            RAISED: 'b',
+          },
         },
-        b: {}
-      }
+        b: {},
+      },
     });
 
     const actor = interpret(machine).start();
@@ -2790,21 +2837,21 @@ describe('raise', () => {
     const machine = createMachine<MachineContext, MachineEvent>({
       initial: 'a',
       context: {
-        eventType: 'RAISED'
+        eventType: 'RAISED',
       },
       states: {
         a: {
           on: {
             NEXT: {
               actions: raise<MachineContext, any>((ctx: any) => ({
-                type: ctx.eventType
-              }))
+                type: ctx.eventType,
+              })),
             },
-            RAISED: 'b'
-          }
+            RAISED: 'b',
+          },
         },
-        b: {}
-      }
+        b: {},
+      },
     });
 
     const actor = interpret(machine).start();
@@ -2821,16 +2868,16 @@ describe('raise', () => {
         a: {
           on: {
             NEXT: {
-              actions: raise({ type: 'RAISED' }, { delay: 1, id: 'myId' })
+              actions: raise({ type: 'RAISED' }, { delay: 1, id: 'myId' }),
             },
             RAISED: 'b',
             CANCEL: {
-              actions: actions.cancel('myId')
-            }
-          }
+              actions: actions.cancel('myId'),
+            },
+          },
         },
-        b: {}
-      }
+        b: {},
+      },
     });
 
     const actor = interpret(machine).start();
@@ -2852,18 +2899,18 @@ it('should call transition actions in document order for same-level parallel reg
       a: {
         on: {
           FOO: {
-            actions: () => actual.push('a')
-          }
-        }
+            actions: () => actual.push('a'),
+          },
+        },
       },
       b: {
         on: {
           FOO: {
-            actions: () => actual.push('b')
-          }
-        }
-      }
-    }
+            actions: () => actual.push('b'),
+          },
+        },
+      },
+    },
   });
   const service = interpret(machine).start();
   service.send({ type: 'FOO' });
@@ -2883,20 +2930,20 @@ it('should call transition actions in document order for states at different lev
           a1: {
             on: {
               FOO: {
-                actions: () => actual.push('a1')
-              }
-            }
-          }
-        }
+                actions: () => actual.push('a1'),
+              },
+            },
+          },
+        },
       },
       b: {
         on: {
           FOO: {
-            actions: () => actual.push('b')
-          }
-        }
-      }
-    }
+            actions: () => actual.push('b'),
+          },
+        },
+      },
+    },
   });
   const service = interpret(machine).start();
   service.send({ type: 'FOO' });
@@ -2911,13 +2958,13 @@ describe('assign action order', () => {
     const machine = createMachine<{ count: number }>({
       context: { count: 0 },
       entry: [
-        (ctx) => captured.push(ctx.count), // 0
-        assign({ count: (ctx) => ctx.count + 1 }),
-        (ctx) => captured.push(ctx.count), // 1
-        assign({ count: (ctx) => ctx.count + 1 }),
-        (ctx) => captured.push(ctx.count) // 2
+        ctx => captured.push(ctx.count), // 0
+        assign({ count: ctx => ctx.count + 1 }),
+        ctx => captured.push(ctx.count), // 1
+        assign({ count: ctx => ctx.count + 1 }),
+        ctx => captured.push(ctx.count), // 2
       ],
-      preserveActionOrder: true
+      preserveActionOrder: true,
     });
 
     interpret(machine).start();
@@ -2935,17 +2982,20 @@ describe('assign action order', () => {
     const machine = createMachine<CountCtx>({
       context: { count: 0 },
       entry: [
-        (ctx) => captured.push(ctx.count), // 0
+        ctx => captured.push(ctx.count), // 0
         pure(() => {
           return [
-            assign<CountCtx>({ count: (ctx) => ctx.count + 1 }),
-            { type: 'capture', exec: (ctx: any) => captured.push(ctx.count) }, // 1
-            assign<CountCtx>({ count: (ctx) => ctx.count + 1 })
+            assign<CountCtx>({ count: ctx => ctx.count + 1 }),
+            {
+              type: 'capture',
+              exec: (ctx: any) => captured.push(ctx.count),
+            }, // 1
+            assign<CountCtx>({ count: ctx => ctx.count + 1 }),
           ];
         }),
-        (ctx) => captured.push(ctx.count) // 2
+        ctx => captured.push(ctx.count), // 2
       ],
-      preserveActionOrder: true
+      preserveActionOrder: true,
     });
 
     interpret(machine).start();
@@ -2954,21 +3004,21 @@ describe('assign action order', () => {
   });
 
   it('should capture correct context values on subsequent transitions', () => {
-    let captured: number[] = [];
+    const captured: number[] = [];
 
     const machine = createMachine<{ counter: number }>({
       context: {
-        counter: 0
+        counter: 0,
       },
       on: {
         EV: {
           actions: [
-            assign({ counter: (ctx) => ctx.counter + 1 }),
-            (ctx) => captured.push(ctx.counter)
-          ]
-        }
+            assign({ counter: ctx => ctx.counter + 1 }),
+            ctx => captured.push(ctx.counter),
+          ],
+        },
       },
-      preserveActionOrder: true
+      preserveActionOrder: true,
     });
 
     const service = interpret(machine).start();
@@ -2981,24 +3031,24 @@ describe('assign action order', () => {
 
   it.each([undefined, false])(
     'should prioritize assign actions when .preserveActionOrder = %i',
-    (preserveActionOrder) => {
+    preserveActionOrder => {
       const captured: number[] = [];
 
       const machine = createMachine<{ count: number }>({
         context: { count: 0 },
         entry: [
-          (ctx) => captured.push(ctx.count),
-          assign({ count: (ctx) => ctx.count + 1 }),
-          (ctx) => captured.push(ctx.count),
-          assign({ count: (ctx) => ctx.count + 1 }),
-          (ctx) => captured.push(ctx.count)
+          ctx => captured.push(ctx.count),
+          assign({ count: ctx => ctx.count + 1 }),
+          ctx => captured.push(ctx.count),
+          assign({ count: ctx => ctx.count + 1 }),
+          ctx => captured.push(ctx.count),
         ],
-        preserveActionOrder
+        preserveActionOrder,
       });
 
       interpret(machine).start();
 
       expect(captured).toEqual([2, 2, 2]);
-    }
+    },
   );
 });

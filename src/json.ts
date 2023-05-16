@@ -1,14 +1,16 @@
-import { StateNode, ActionObject, Guard, InvokeDefinition } from './';
-import { mapValues, isFunction } from './utils';
+import { StateNode } from './StateNode';
+import { ActionObject, Guard, InvokeDefinition } from './types/types';
+import { isFunction, mapValues } from './utils';
 
 interface JSONFunction {
   $function: string;
 }
 
 // tslint:disable-next-line:ban-types
+// eslint-disable-next-line @typescript-eslint/ban-types
 export function stringifyFunction(fn: Function): JSONFunction {
   return {
-    $function: fn.toString()
+    $function: fn.toString(),
   };
 }
 
@@ -43,27 +45,29 @@ export function machineToJSON(stateNode: StateNode): StateNodeConfig {
   const config = {
     type: stateNode.type,
     initial:
-      stateNode.initial === undefined ? undefined : String(stateNode.initial),
+      stateNode.initial === undefined
+        ? undefined
+        : String(stateNode.initial),
     id: stateNode.id,
     key: stateNode.key,
     entry: stateNode.onEntry,
     exit: stateNode.onExit,
-    on: mapValues(stateNode.on, (transition) => {
-      return transition.map((t) => {
+    on: mapValues(stateNode.on, transition => {
+      return transition.map(t => {
         return {
           target: t.target ? t.target.map(getStateNodeId) : [],
           source: getStateNodeId(t.source),
           actions: t.actions,
           cond: t.cond,
-          eventType: t.eventType
+          eventType: t.eventType,
         };
       });
     }),
     invoke: stateNode.invoke,
-    states: {}
+    states: {},
   };
 
-  Object.values(stateNode.states).forEach((sn) => {
+  Object.values(stateNode.states).forEach(sn => {
     config.states[sn.key] = machineToJSON(sn);
   });
 
@@ -94,12 +98,15 @@ export function parse(machineString: string): StateNodeConfig {
 export function jsonify<T extends Record<string, any>>(value: T): T {
   Object.defineProperty(value, 'toJSON', {
     value: () =>
-      mapValues(value, (subValue) => {
+      mapValues(value, subValue => {
         if (isFunction(subValue)) {
           return stringifyFunction(subValue);
-        } else if (typeof subValue === 'object' && !Array.isArray(subValue)) {
+        } else if (
+          typeof subValue === 'object' &&
+          !Array.isArray(subValue)
+        ) {
           // mostly for assignments
-          return mapValues(subValue, (subSubValue) => {
+          return mapValues(subValue, subSubValue => {
             if (isFunction(subSubValue)) {
               return stringifyFunction(subSubValue);
             }
@@ -108,7 +115,7 @@ export function jsonify<T extends Record<string, any>>(value: T): T {
         }
 
         return subValue;
-      })
+      }),
   });
 
   return value;

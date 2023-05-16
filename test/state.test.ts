@@ -1,13 +1,14 @@
+import { assign, initEvent } from '../src/actions';
 import {
   Machine,
   State,
   StateFrom,
-  interpret,
   createMachine,
-  spawn
+  interpret,
+  spawn,
 } from '../src/index';
-import { initEvent, assign } from '../src/actions';
 import { toSCXMLEvent } from '../src/utils';
+import { emptyFunction } from './fixtures/utils';
 
 type Events =
   | { type: 'BAR_EVENT' }
@@ -34,28 +35,28 @@ const machine = Machine<any, Events>({
       on: {
         EXTERNAL: {
           target: 'one',
-          internal: false
+          internal: false,
         },
         INERT: {
           target: 'one',
-          internal: true
+          internal: true,
         },
         INTERNAL: {
           target: 'one',
           internal: true,
-          actions: ['doSomething']
+          actions: ['doSomething'],
         },
         TO_TWO: 'two',
         TO_TWO_MAYBE: {
           target: 'two',
           cond: function maybe() {
             return true;
-          }
+          },
         },
         TO_THREE: 'three',
         FORBIDDEN_EVENT: undefined,
-        TO_FINAL: 'success'
-      }
+        TO_FINAL: 'success',
+      },
     },
     two: {
       initial: 'deep',
@@ -66,20 +67,20 @@ const machine = Machine<any, Events>({
             foo: {
               on: {
                 FOO_EVENT: 'bar',
-                FORBIDDEN_EVENT: undefined
-              }
+                FORBIDDEN_EVENT: undefined,
+              },
             },
             bar: {
               on: {
-                BAR_EVENT: 'foo'
-              }
-            }
-          }
-        }
+                BAR_EVENT: 'foo',
+              },
+            },
+          },
+        },
       },
       on: {
-        DEEP_EVENT: '.'
-      }
+        DEEP_EVENT: '.',
+      },
     },
     three: {
       type: 'parallel',
@@ -88,30 +89,30 @@ const machine = Machine<any, Events>({
           initial: 'p31',
           states: {
             p31: {
-              on: { P31: '.' }
-            }
-          }
+              on: { P31: '.' },
+            },
+          },
         },
         second: {
           initial: 'p32',
           states: {
             p32: {
-              on: { P32: '.' }
-            }
-          }
-        }
+              on: { P32: '.' },
+            },
+          },
+        },
       },
       on: {
-        THREE_EVENT: '.'
-      }
+        THREE_EVENT: '.',
+      },
     },
     success: {
-      type: 'final'
-    }
+      type: 'final',
+    },
   },
   on: {
-    MACHINE_EVENT: '.two'
-  }
+    MACHINE_EVENT: '.two',
+  },
 });
 
 describe('State', () => {
@@ -121,23 +122,35 @@ describe('State', () => {
     });
 
     it('states from external transitions with entry actions should be changed', () => {
-      const changedState = machine.transition(machine.initialState, 'EXTERNAL');
+      const changedState = machine.transition(
+        machine.initialState,
+        'EXTERNAL',
+      );
       expect(changedState.changed).toBe(true);
     });
 
     it('states from internal transitions with no actions should be unchanged', () => {
-      const changedState = machine.transition(machine.initialState, 'EXTERNAL');
+      const changedState = machine.transition(
+        machine.initialState,
+        'EXTERNAL',
+      );
       const unchangedState = machine.transition(changedState, 'INERT');
       expect(unchangedState.changed).toBe(false);
     });
 
     it('states from internal transitions with actions should be changed', () => {
-      const changedState = machine.transition(machine.initialState, 'INTERNAL');
+      const changedState = machine.transition(
+        machine.initialState,
+        'INTERNAL',
+      );
       expect(changedState.changed).toBe(true);
     });
 
     it('normal state transitions should be changed (initial state)', () => {
-      const changedState = machine.transition(machine.initialState, 'TO_TWO');
+      const changedState = machine.transition(
+        machine.initialState,
+        'TO_TWO',
+      );
       expect(changedState.changed).toBe(true);
     });
 
@@ -149,7 +162,10 @@ describe('State', () => {
 
     it('normal state transitions with unknown event should be unchanged', () => {
       const twoState = machine.transition(machine.initialState, 'TO_TWO');
-      const changedState = machine.transition(twoState, 'UNKNOWN_EVENT' as any);
+      const changedState = machine.transition(
+        twoState,
+        'UNKNOWN_EVENT' as any,
+      );
       expect(changedState.changed).toBe(false);
     });
 
@@ -160,14 +176,14 @@ describe('State', () => {
         states: {
           one: {
             on: {
-              DONE: 'two'
-            }
+              DONE: 'two',
+            },
           },
 
           two: {
-            type: 'final'
-          }
-        }
+            type: 'final',
+          },
+        },
       });
 
       const twoState = finalMachine.transition('one', 'DONE');
@@ -180,17 +196,17 @@ describe('State', () => {
         id: 'assign',
         initial: 'same',
         context: {
-          count: 0
+          count: 0,
         },
         states: {
           same: {
             on: {
               EVENT: {
-                actions: assign({ count: (ctx) => ctx.count + 1 })
-              }
-            }
-          }
-        }
+                actions: assign({ count: ctx => ctx.count + 1 }),
+              },
+            },
+          },
+        },
       });
 
       const { initialState } = assignMachine;
@@ -214,7 +230,7 @@ describe('State', () => {
       const toggleMachine = Machine<Ctx, ToggleEvents>({
         id: 'input',
         context: {
-          value: ''
+          value: '',
         },
         type: 'parallel',
         states: {
@@ -224,41 +240,44 @@ describe('State', () => {
                 actions: assign({
                   value: (_, e) => {
                     return e.value;
-                  }
-                })
-              }
-            }
+                  },
+                }),
+              },
+            },
           },
           validity: {
             initial: 'invalid',
             states: {
               invalid: {},
-              valid: {}
+              valid: {},
             },
             on: {
               CHANGE: [
                 {
                   target: '.valid',
-                  cond: () => true
+                  cond: () => true,
                 },
                 {
-                  target: '.invalid'
-                }
-              ]
-            }
-          }
-        }
+                  target: '.invalid',
+                },
+              ],
+            },
+          },
+        },
       });
 
-      const nextState = toggleMachine.transition(toggleMachine.initialState, {
-        type: 'CHANGE',
-        value: 'whatever'
-      });
+      const nextState = toggleMachine.transition(
+        toggleMachine.initialState,
+        {
+          type: 'CHANGE',
+          value: 'whatever',
+        },
+      );
 
       expect(nextState.changed).toBe(true);
       expect(nextState.value).toEqual({
         edit: {},
-        validity: 'valid'
+        validity: 'valid',
       });
     });
   });
@@ -273,15 +292,19 @@ describe('State', () => {
         'TO_FINAL',
         'TO_THREE',
         'TO_TWO',
-        'TO_TWO_MAYBE'
+        'TO_TWO_MAYBE',
       ]);
 
       expect(
-        machine.transition(machine.initialState, 'TO_TWO').nextEvents.sort()
+        machine
+          .transition(machine.initialState, 'TO_TWO')
+          .nextEvents.sort(),
       ).toEqual(['DEEP_EVENT', 'FOO_EVENT', 'MACHINE_EVENT']);
 
       expect(
-        machine.transition(machine.initialState, 'TO_THREE').nextEvents.sort()
+        machine
+          .transition(machine.initialState, 'TO_THREE')
+          .nextEvents.sort(),
       ).toEqual(['MACHINE_EVENT', 'P31', 'P32', 'THREE_EVENT']);
     });
 
@@ -293,7 +316,7 @@ describe('State', () => {
         'MACHINE_EVENT',
         'P31',
         'P32',
-        'THREE_EVENT'
+        'THREE_EVENT',
       ]);
     });
 
@@ -303,9 +326,9 @@ describe('State', () => {
         initial: 'idle',
         states: {
           idle: {
-            on: {}
-          }
-        }
+            on: {},
+          },
+        },
       });
 
       expect(noEventsMachine.initialState.nextEvents).toEqual([]);
@@ -322,7 +345,7 @@ describe('State', () => {
       >;
 
       expect(machine.transition(stateFromConfig, 'TO_TWO').value).toEqual({
-        two: { deep: 'foo' }
+        two: { deep: 'foo' },
       });
     });
 
@@ -335,9 +358,9 @@ describe('State', () => {
         typeof machine
       >;
 
-      expect(machine.resolveState(stateFromConfig).nextEvents.sort()).toEqual(
-        nextEvents.sort()
-      );
+      expect(
+        machine.resolveState(stateFromConfig).nextEvents.sort(),
+      ).toEqual(nextEvents.sort());
     });
   });
 
@@ -360,7 +383,7 @@ describe('State', () => {
       const naturallyInertState = State.from('foo');
 
       expect(State.inert(naturallyInertState, undefined)).toEqual(
-        naturallyInertState
+        naturallyInertState,
       );
     });
   });
@@ -379,7 +402,7 @@ describe('State', () => {
 
       const nextState = machine.transition(initialState, {
         type: 'TO_TWO',
-        foo: 'bar'
+        foo: 'bar',
       });
 
       expect(nextState.event).toEqual({ type: 'TO_TWO', foo: 'bar' });
@@ -406,11 +429,11 @@ describe('State', () => {
 
       const nextState = machine.transition(initialState, {
         type: 'TO_TWO',
-        foo: 'bar'
+        foo: 'bar',
       });
 
       expect(nextState._event).toEqual(
-        toSCXMLEvent({ type: 'TO_TWO', foo: 'bar' })
+        toSCXMLEvent({ type: 'TO_TWO', foo: 'bar' }),
       );
     });
 
@@ -428,21 +451,21 @@ describe('State', () => {
         toSCXMLEvent(
           {
             type: 'TO_TWO',
-            foo: 'bar'
+            foo: 'bar',
           },
           {
-            sendid: 'test'
-          }
-        )
+            sendid: 'test',
+          },
+        ),
       );
 
       expect(nextState._event).toEqual(
         toSCXMLEvent(
           { type: 'TO_TWO', foo: 'bar' },
           {
-            sendid: 'test'
-          }
-        )
+            sendid: 'test',
+          },
+        ),
       );
     });
 
@@ -451,32 +474,32 @@ describe('State', () => {
         const testMachine = Machine({
           initial: 'active',
           states: {
-            active: {}
-          }
+            active: {},
+          },
         });
 
         expect(testMachine.initialState._sessionid).toBeNull();
       });
 
-      it('_sessionid should be the service sessionId for invoked machines', (done) => {
+      it('_sessionid should be the service sessionId for invoked machines', done => {
         const testMachine = Machine({
           initial: 'active',
           states: {
             active: {
               on: {
-                TOGGLE: 'inactive'
-              }
+                TOGGLE: 'inactive',
+              },
             },
             inactive: {
-              type: 'final'
-            }
-          }
+              type: 'final',
+            },
+          },
         });
 
         const service = interpret(testMachine);
 
         service
-          .onTransition((state) => {
+          .onTransition(state => {
             expect(state._sessionid).toEqual(service.sessionId);
           })
           .onDone(() => {
@@ -493,13 +516,13 @@ describe('State', () => {
           states: {
             active: {
               on: {
-                TOGGLE: 'inactive'
-              }
+                TOGGLE: 'inactive',
+              },
             },
             inactive: {
-              type: 'final'
-            }
-          }
+              type: 'final',
+            },
+          },
         });
 
         const { initialState } = testMachine;
@@ -522,18 +545,18 @@ describe('State', () => {
 
     it('should have transitions for the sent event', () => {
       expect(
-        machine.transition(initialState, 'TO_TWO').transitions
+        machine.transition(initialState, 'TO_TWO').transitions,
       ).toContainEqual(expect.objectContaining({ eventType: 'TO_TWO' }));
     });
 
     it('should have condition in the transition', () => {
       expect(
-        machine.transition(initialState, 'TO_TWO_MAYBE').transitions
+        machine.transition(initialState, 'TO_TWO_MAYBE').transitions,
       ).toContainEqual(
         expect.objectContaining({
           eventType: 'TO_TWO_MAYBE',
-          cond: expect.objectContaining({ name: 'maybe' })
-        })
+          cond: expect.objectContaining({ name: 'maybe' }),
+        }),
       );
     });
   });
@@ -551,7 +574,11 @@ describe('State', () => {
     it('should return all state paths as strings', () => {
       const twoState = machine.transition('one', 'TO_TWO');
 
-      expect(twoState.toStrings()).toEqual(['two', 'two.deep', 'two.deep.foo']);
+      expect(twoState.toStrings()).toEqual([
+        'two',
+        'two.deep',
+        'two.deep.foo',
+      ]);
     });
 
     it('should respect `delimiter` option for deeply nested states', () => {
@@ -560,7 +587,7 @@ describe('State', () => {
       expect(twoState.toStrings(undefined, ':')).toEqual([
         'two',
         'two:deep',
-        'two:deep:foo'
+        'two:deep:foo',
       ]);
     });
 
@@ -589,11 +616,11 @@ describe('State', () => {
         states: {
           a: {
             on: {
-              NEXT: 'b'
-            }
+              NEXT: 'b',
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       expect(machine.initialState.can('NEXT')).toBe(true);
@@ -605,11 +632,11 @@ describe('State', () => {
         states: {
           a: {
             on: {
-              NEXT: 'b'
-            }
+              NEXT: 'b',
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       expect(machine.initialState.can({ type: 'NEXT' })).toBe(true);
@@ -622,11 +649,11 @@ describe('State', () => {
           a: {
             on: {
               NEXT: {
-                actions: 'newAction'
-              }
-            }
-          }
-        }
+                actions: 'newAction',
+              },
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'NEXT' })).toBe(true);
@@ -640,11 +667,11 @@ describe('State', () => {
           a: {
             on: {
               NEXT: {
-                actions: assign({ count: 1 })
-              }
-            }
-          }
-        }
+                actions: assign({ count: 1 }),
+              },
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'NEXT' })).toBe(true);
@@ -656,10 +683,10 @@ describe('State', () => {
         states: {
           a: {
             on: {
-              EV: 'a'
-            }
-          }
-        }
+              EV: 'a',
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'EV' })).toBe(true);
@@ -670,12 +697,12 @@ describe('State', () => {
         initial: 'a',
         states: {
           a: {
-            entry: () => {},
+            entry: emptyFunction,
             on: {
-              EV: 'a'
-            }
-          }
-        }
+              EV: 'a',
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'EV' })).toBe(true);
@@ -689,11 +716,11 @@ describe('State', () => {
             on: {
               EV: {
                 target: 'a',
-                actions: () => {}
-              }
-            }
-          }
-        }
+                actions: emptyFunction,
+              },
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'EV' })).toBe(true);
@@ -706,11 +733,11 @@ describe('State', () => {
           a: {
             on: {
               EV: {
-                actions: () => {}
-              }
-            }
-          }
-        }
+                actions: emptyFunction,
+              },
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'EV' })).toBe(true);
@@ -722,10 +749,10 @@ describe('State', () => {
         states: {
           a: {
             on: {
-              EV: undefined
-            }
-          }
-        }
+              EV: undefined,
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can({ type: 'EV' })).toBe(false);
@@ -737,11 +764,11 @@ describe('State', () => {
         states: {
           a: {
             on: {
-              NEXT: 'b'
-            }
+              NEXT: 'b',
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       expect(machine.initialState.can({ type: 'UNKNOWN' })).toBe(false);
@@ -755,18 +782,18 @@ describe('State', () => {
             on: {
               CHECK: {
                 target: 'b',
-                cond: () => true
-              }
-            }
+                cond: () => true,
+              },
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       expect(
         machine.initialState.can({
-          type: 'CHECK'
-        })
+          type: 'CHECK',
+        }),
       ).toBe(true);
     });
 
@@ -778,18 +805,18 @@ describe('State', () => {
             on: {
               CHECK: {
                 target: 'b',
-                cond: () => false
-              }
-            }
+                cond: () => false,
+              },
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       expect(
         machine.initialState.can({
-          type: 'CHECK'
-        })
+          type: 'CHECK',
+        }),
       ).toBe(false);
     });
 
@@ -805,13 +832,13 @@ describe('State', () => {
                 actions: assign(() => ({
                   ref: spawn(() => {
                     spawned = true;
-                  })
-                }))
-              }
-            }
+                  }),
+                })),
+              },
+            },
           },
-          b: {}
-        }
+          b: {},
+        },
       });
 
       const service = interpret(machine).start();
@@ -831,13 +858,13 @@ describe('State', () => {
         context: {},
         on: {
           EVENT: {
-            actions: assign((ctx) => {
+            actions: assign(ctx => {
               // Side-effect just for testing
               executed = true;
               return ctx;
-            })
-          }
-        }
+            }),
+          },
+        },
       });
 
       const { initialState } = machine;
@@ -858,21 +885,21 @@ describe('State', () => {
                 id: 'foo',
                 on: {
                   // first region doesn't change value here
-                  EVENT: { target: ['#foo', '#bar'] }
-                }
-              }
-            }
+                  EVENT: { target: ['#foo', '#bar'] },
+                },
+              },
+            },
           },
           b: {
             initial: 'b1',
             states: {
               b1: {},
               b2: {
-                id: 'bar'
-              }
-            }
-          }
-        }
+                id: 'bar',
+              },
+            },
+          },
+        },
       });
 
       expect(machine.initialState.can('EVENT')).toBeTruthy();
@@ -888,17 +915,17 @@ describe('State', () => {
             states: {
               a1: {
                 on: {
-                  NEXT: 'a2'
-                }
+                  NEXT: 'a2',
+                },
               },
               a2: {
                 on: {
-                  NEXT: '#foo'
-                }
-              }
-            }
-          }
-        }
+                  NEXT: '#foo',
+                },
+              },
+            },
+          },
+        },
       });
 
       const nextState = machine.transition(undefined, { type: 'NEXT' });
@@ -913,9 +940,9 @@ describe('State', () => {
         initial: 'a',
         states: {
           a: {
-            tags: 'foo'
-          }
-        }
+            tags: 'foo',
+          },
+        },
       });
 
       const persistedState = JSON.stringify(machine.initialState);

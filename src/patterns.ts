@@ -1,25 +1,25 @@
 import {
   AtomicStateNodeConfig,
-  StatesConfig,
   Event,
   EventObject,
+  StateNodeConfig,
   StateSchema,
-  StateNodeConfig
-} from './types';
+  StatesConfig,
+} from './types/types';
 import { toEventObject } from './utils';
 
 export function toggle<TEventType extends string = string>(
   onState: string,
   offState: string,
-  eventType: TEventType
+  eventType: TEventType,
 ): Record<string, AtomicStateNodeConfig<any, { type: TEventType }>> {
   return {
     [onState]: {
-      on: { [eventType]: offState }
+      on: { [eventType]: offState },
     },
     [offState]: {
-      on: { [eventType]: onState }
-    }
+      on: { [eventType]: onState },
+    },
   } as Record<string, AtomicStateNodeConfig<any, { type: TEventType }>>;
 }
 
@@ -30,15 +30,15 @@ interface SequencePatternOptions<TEvent extends EventObject> {
 
 const defaultSequencePatternOptions = {
   nextEvent: 'NEXT',
-  prevEvent: 'PREV'
+  prevEvent: 'PREV',
 };
 
 export function sequence<
   TStateSchema extends StateSchema,
-  TEvent extends EventObject
+  TEvent extends EventObject,
 >(
   items: Array<keyof TStateSchema['states']>,
-  options?: Partial<SequencePatternOptions<TEvent>>
+  options?: Partial<SequencePatternOptions<TEvent>>,
 ): {
   initial: keyof TStateSchema['states'];
   states: StatesConfig<any, TStateSchema, TEvent>;
@@ -56,7 +56,7 @@ export function sequence<
 
   items.forEach((item, i) => {
     const state: StateNodeConfig<TEvent, TStateSchema, TEvent> = {
-      on: {}
+      on: {},
     };
 
     if (i + 1 === items.length) {
@@ -76,6 +76,6 @@ export function sequence<
 
   return {
     initial: items[0] as keyof TStateSchema['states'],
-    states: states as StatesConfig<any, TStateSchema, TEvent>
+    states: states as StatesConfig<any, TStateSchema, TEvent>,
   };
 }

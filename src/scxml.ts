@@ -1,34 +1,35 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { xml2js, Element as XMLElement } from 'xml-js';
+import * as actions from './actions';
+import { AnyStateMachine, Machine } from './index';
 import {
-  EventObject,
   ActionObject,
+  ChooseCondition,
+  DelayExpr,
+  EventObject,
   SCXMLEventMeta,
   SendExpr,
-  DelayExpr,
-  ChooseCondition
-} from './types';
-import { AnyStateMachine, Machine } from './index';
-import { mapValues, isString } from './utils';
-import * as actions from './actions';
+} from './types/types';
+import { isString, mapValues } from './utils';
 
 function getAttribute(
   element: XMLElement,
-  attribute: string
+  attribute: string,
 ): string | number | undefined {
   return element.attributes ? element.attributes[attribute] : undefined;
 }
 
-function indexedRecord<T extends {}>(
+function indexedRecord<T extends object>(
   items: T[],
-  identifier: string | ((item: T) => string)
+  identifier: string | ((item: T) => string),
 ): Record<string, T> {
   const record: Record<string, T> = {};
 
   const identifierFn = isString(identifier)
-    ? (item) => item[identifier]
+    ? item => item[identifier]
     : identifier;
 
-  items.forEach((item) => {
+  items.forEach(item => {
     const key = identifierFn(item);
 
     record[key] = item;
@@ -39,7 +40,7 @@ function indexedRecord<T extends {}>(
 
 function executableContent(elements: XMLElement[]) {
   const transition: any = {
-    actions: mapActions(elements)
+    actions: mapActions(elements),
   };
 
   return transition;
@@ -48,7 +49,7 @@ function executableContent(elements: XMLElement[]) {
 function getTargets(targetAttr?: string | number): string[] | undefined {
   // return targetAttr ? [`#${targetAttr}`] : undefined;
   return targetAttr
-    ? `${targetAttr}`.split(/\s+/).map((target) => `#${target}`)
+    ? `${targetAttr}`.split(/\s+/).map(target => `#${target}`)
     : undefined;
 }
 
@@ -74,12 +75,13 @@ function delayToMs(delay?: string | number): number | undefined {
     if (!hasDecimal) {
       return parseInt(secondsMatch[3], 10) * 1000;
     }
+    // eslint-disable-next-line no-extra-boolean-cast
     const secondsPart = !!secondsMatch[1]
       ? parseInt(secondsMatch[1], 10) * 1000
       : 0;
     const millisecondsPart = parseInt(
       (secondsMatch[3] as any).padEnd(3, '0'),
-      10
+      10,
     );
 
     if (millisecondsPart >= 1000) {
@@ -94,16 +96,16 @@ function delayToMs(delay?: string | number): number | undefined {
 
 const evaluateExecutableContent = <
   TContext extends object,
-  TEvent extends EventObject
+  TEvent extends EventObject,
 >(
   context: TContext,
   _ev: TEvent,
   meta: SCXMLEventMeta<TEvent>,
-  body: string
+  body: string,
 ) => {
   const datamodel = context
     ? Object.keys(context)
-        .map((key) => `const ${key} = context['${key}'];`)
+        .map(key => `const ${key} = context['${key}'];`)
         .join('\n')
     : '';
 
@@ -124,21 +126,26 @@ const evaluateExecutableContent = <
 
 function createCond<
   TContext extends object,
-  TEvent extends EventObject = EventObject
+  TEvent extends EventObject = EventObject,
 >(cond: string) {
   return (context: TContext, _event: TEvent, meta) => {
-    return evaluateExecutableContent(context, _event, meta, `return ${cond};`);
+    return evaluateExecutableContent(
+      context,
+      _event,
+      meta,
+      `return ${cond};`,
+    );
   };
 }
 
 function mapAction<
   TContext extends object,
-  TEvent extends EventObject = EventObject
+  TEvent extends EventObject = EventObject,
 >(element: XMLElement): ActionObject<TContext, TEvent> {
   switch (element.name) {
     case 'raise': {
       return actions.raise<TContext, TEvent, TEvent>(
-        element.attributes!.event! as string
+        element.attributes!.event! as string,
       );
     }
     case 'assign': {
@@ -163,10 +170,12 @@ function mapAction<
         element.elements.reduce((acc, child) => {
           if (child.name === 'content') {
             throw new Error(
-              'Conversion of <content/> inside <send/> not implemented.'
+              'Conversion of <content/> inside <send/> not implemented.',
             );
           }
-          return `${acc}${child.attributes!.name}:${child.attributes!.expr},\n`;
+          return `${acc}${child.attributes!.name}:${
+            child.attributes!.expr
+          },\n`;
         }, '');
 
       if (event && !params) {
@@ -197,7 +206,7 @@ function mapAction<
 
       return actions.send<TContext, TEvent>(convertedEvent, {
         delay: convertedDelay,
-        to: target as string | undefined
+        to: target as string | undefined,
       });
     }
     case 'log': {
@@ -211,7 +220,7 @@ function mapAction<
 
           return evaluateExecutableContent(context, e, meta, fnBody);
         },
-        label !== undefined ? String(label) : undefined
+        label !== undefined ? String(label) : undefined,
       );
     }
     case 'if': {
@@ -219,7 +228,7 @@ function mapAction<
 
       let current: ChooseCondition<TContext, TEvent> = {
         cond: createCond(element.attributes!.cond as string),
-        actions: []
+        actions: [],
       };
 
       for (const el of element.elements!) {
@@ -232,7 +241,7 @@ function mapAction<
             conds.push(current);
             current = {
               cond: createCond(el.attributes!.cond as string),
-              actions: []
+              actions: [],
             };
             break;
           case 'else':
@@ -240,7 +249,9 @@ function mapAction<
             current = { actions: [] };
             break;
           default:
-            (current.actions as any[]).push(mapAction<TContext, TEvent>(el));
+            (current.actions as any[]).push(
+              mapAction<TContext, TEvent>(el),
+            );
             break;
         }
       }
@@ -250,14 +261,14 @@ function mapAction<
     }
     default:
       throw new Error(
-        `Conversion of "${element.name}" elements is not implemented yet.`
+        `Conversion of "${element.name}" elements is not implemented yet.`,
       );
   }
 }
 
 function mapActions<
   TContext extends object,
-  TEvent extends EventObject = EventObject
+  TEvent extends EventObject = EventObject,
 >(elements: XMLElement[]): Array<ActionObject<TContext, TEvent>> {
   const mapped: Array<ActionObject<TContext, TEvent>> = [];
 
@@ -275,7 +286,7 @@ function mapActions<
 function toConfig(
   nodeJson: XMLElement,
   id: string,
-  options: ScxmlToMachineOptions
+  options: ScxmlToMachineOptions,
 ) {
   const parallel = nodeJson.name === 'parallel';
   let initial = parallel ? undefined : nodeJson.attributes!.initial;
@@ -286,12 +297,12 @@ function toConfig(
       if (!elements) {
         return {
           id,
-          history: nodeJson.attributes!.type || 'shallow'
+          history: nodeJson.attributes!.type || 'shallow',
         };
       }
 
       const [transitionElement] = elements.filter(
-        (element) => element.name === 'transition'
+        element => element.name === 'transition',
       );
 
       const target = getAttribute(transitionElement, 'target');
@@ -300,13 +311,13 @@ function toConfig(
       return {
         id,
         history,
-        target: target ? `#${target}` : undefined
+        target: target ? `#${target}` : undefined,
       };
     }
     case 'final': {
       return {
         ...nodeJson.attributes,
-        type: 'final'
+        type: 'final',
       };
     }
     default:
@@ -315,47 +326,47 @@ function toConfig(
 
   if (nodeJson.elements) {
     const stateElements = nodeJson.elements.filter(
-      (element) =>
+      element =>
         element.name === 'state' ||
         element.name === 'parallel' ||
         element.name === 'final' ||
-        element.name === 'history'
+        element.name === 'history',
     );
 
     const transitionElements = nodeJson.elements.filter(
-      (element) => element.name === 'transition'
+      element => element.name === 'transition',
     );
 
     const invokeElements = nodeJson.elements.filter(
-      (element) => element.name === 'invoke'
+      element => element.name === 'invoke',
     );
 
     const onEntryElement = nodeJson.elements.find(
-      (element) => element.name === 'onentry'
+      element => element.name === 'onentry',
     );
 
     const onExitElement = nodeJson.elements.find(
-      (element) => element.name === 'onexit'
+      element => element.name === 'onexit',
     );
 
     const states: Record<string, any> = indexedRecord(
       stateElements,
-      (item) => `${item.attributes!.id}`
+      item => `${item.attributes!.id}`,
     );
 
     const initialElement = !initial
-      ? nodeJson.elements.find((element) => element.name === 'initial')
+      ? nodeJson.elements.find(element => element.name === 'initial')
       : undefined;
 
     if (initialElement && initialElement.elements!.length) {
       initial = initialElement.elements!.find(
-        (element) => element.name === 'transition'
+        element => element.name === 'transition',
       )!.attributes!.target;
     } else if (!initialElement && stateElements.length) {
       initial = stateElements[0].attributes!.id;
     }
 
-    const on = transitionElements.map((value) => {
+    const on = transitionElements.map(value => {
       const event = getAttribute(value, 'event') || '';
       const targets = getAttribute(value, 'target');
       const internal = getAttribute(value, 'type') === 'internal';
@@ -363,13 +374,15 @@ function toConfig(
       return {
         event,
         target: getTargets(targets),
-        ...(value.elements ? executableContent(value.elements) : undefined),
+        ...(value.elements
+          ? executableContent(value.elements)
+          : undefined),
         ...(value.attributes && value.attributes.cond
           ? {
-              cond: createCond(value.attributes!.cond as string)
+              cond: createCond(value.attributes!.cond as string),
             }
           : undefined),
-        internal
+        internal,
       };
     });
 
@@ -381,18 +394,18 @@ function toConfig(
       ? mapActions(onExitElement.elements!)
       : undefined;
 
-    const invoke = invokeElements.map((element) => {
+    const invoke = invokeElements.map(element => {
       if (
         !['scxml', 'http://www.w3.org/TR/scxml/'].includes(
-          element.attributes!.type as string
+          element.attributes!.type as string,
         )
       ) {
         throw new Error(
-          'Currently only converting invoke elements of type SCXML is supported.'
+          'Currently only converting invoke elements of type SCXML is supported.',
         );
       }
       const content = element.elements!.find(
-        (el) => el.name === 'content'
+        el => el.name === 'content',
       ) as XMLElement;
 
       return scxmlToMachine(content, options);
@@ -405,14 +418,14 @@ function toConfig(
       ...(stateElements.length
         ? {
             states: mapValues(states, (state, key) =>
-              toConfig(state, key, options)
-            )
+              toConfig(state, key, options),
+            ),
           }
         : undefined),
       ...(transitionElements.length ? { on } : undefined),
       ...(onEntry ? { onEntry } : undefined),
       ...(onExit ? { onExit } : undefined),
-      ...(invoke.length ? { invoke } : undefined)
+      ...(invoke.length ? { invoke } : undefined),
     };
   }
 
@@ -425,23 +438,23 @@ export interface ScxmlToMachineOptions {
 
 function scxmlToMachine(
   scxmlJson: XMLElement,
-  options: ScxmlToMachineOptions
+  options: ScxmlToMachineOptions,
 ): AnyStateMachine {
   const machineElement = scxmlJson.elements!.find(
-    (element) => element.name === 'scxml'
+    element => element.name === 'scxml',
   ) as XMLElement;
 
   const dataModelEl = machineElement.elements!.filter(
-    (element) => element.name === 'datamodel'
+    element => element.name === 'datamodel',
   )[0];
 
   const extState = dataModelEl
     ? dataModelEl
-        .elements!.filter((element) => element.name === 'data')
+        .elements!.filter(element => element.name === 'data')
         .reduce((acc, element) => {
           if (element.attributes!.src) {
             throw new Error(
-              "Conversion of `src` attribute on datamodel's <data> elements is not supported."
+              "Conversion of `src` attribute on datamodel's <data> elements is not supported.",
             );
           }
           acc[element.attributes!.id!] = element.attributes!.expr
@@ -455,13 +468,13 @@ function scxmlToMachine(
   return Machine({
     ...toConfig(machineElement, '(machine)', options),
     context: extState,
-    delimiter: options.delimiter
+    delimiter: options.delimiter,
   });
 }
 
 export function toMachine(
   xml: string,
-  options: ScxmlToMachineOptions
+  options: ScxmlToMachineOptions,
 ): AnyStateMachine {
   const json = xml2js(xml) as XMLElement;
   return scxmlToMachine(json, options);

@@ -1,12 +1,12 @@
+import { toActorRef } from './Actor';
+import { doneInvoke, error } from './actions';
 import {
   ActorContext,
   ActorRef,
   Behavior,
   EventObject,
-  Observer
-} from './types';
-import { doneInvoke, error } from './actions';
-import { toActorRef } from './Actor';
+  Observer,
+} from './types/types';
 import { toObserver } from './utils';
 
 /**
@@ -20,13 +20,13 @@ export function fromReducer<TState, TEvent extends EventObject>(
   transition: (
     state: TState,
     event: TEvent,
-    actorContext: ActorContext<TEvent, TState>
+    actorContext: ActorContext<TEvent, TState>,
   ) => TState,
-  initialState: TState
+  initialState: TState,
 ): Behavior<TEvent, TState> {
   return {
     transition,
-    initialState
+    initialState,
   };
 }
 
@@ -52,12 +52,12 @@ type PromiseState<T> =
     };
 
 export function fromPromise<T>(
-  promiseFn: () => Promise<T>
+  promiseFn: () => Promise<T>,
 ): Behavior<PromiseEvents<T>, PromiseState<T>> {
   const initialState: PromiseState<T> = {
     error: undefined,
     data: undefined,
-    status: 'pending'
+    status: 'pending',
   };
 
   return {
@@ -68,17 +68,17 @@ export function fromPromise<T>(
           return {
             error: undefined,
             data: event.data,
-            status: 'fulfilled'
+            status: 'fulfilled',
           };
         case 'reject':
           parent?.send(error(id, event.error));
-          observers.forEach((observer) => {
+          observers.forEach(observer => {
             observer.error(event.error);
           });
           return {
             error: event.error,
             data: undefined,
-            status: 'rejected'
+            status: 'rejected',
           };
         default:
           return state;
@@ -87,16 +87,16 @@ export function fromPromise<T>(
     initialState,
     start: ({ self }) => {
       promiseFn().then(
-        (data) => {
+        data => {
           self.send({ type: 'fulfill', data });
         },
-        (reason) => {
+        reason => {
           self.send({ type: 'reject', error: reason });
-        }
+        },
       );
 
       return initialState;
-    }
+    },
   };
 }
 
@@ -107,7 +107,7 @@ interface SpawnBehaviorOptions {
 
 export function spawnBehavior<TEvent extends EventObject, TEmitted>(
   behavior: Behavior<TEvent, TEmitted>,
-  options: SpawnBehaviorOptions = {}
+  options: SpawnBehaviorOptions = {},
 ): ActorRef<TEvent, TEmitted> {
   let state = behavior.initialState;
   const observers = new Set<Observer<TEmitted>>();
@@ -120,9 +120,10 @@ export function spawnBehavior<TEvent extends EventObject, TEmitted>(
     }
     flushing = true;
     while (mailbox.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const event = mailbox.shift()!;
       state = behavior.transition(state, event, actorCtx);
-      observers.forEach((observer) => observer.next(state));
+      observers.forEach(observer => observer.next(state));
     }
     flushing = false;
   };
@@ -142,16 +143,16 @@ export function spawnBehavior<TEvent extends EventObject, TEmitted>(
       return {
         unsubscribe: () => {
           observers.delete(observer);
-        }
+        },
       };
-    }
+    },
   });
 
   const actorCtx = {
     parent: options.parent,
     self: actor,
     id: options.id || 'anonymous',
-    observers
+    observers,
   };
 
   state = behavior.start ? behavior.start(actorCtx) : state;

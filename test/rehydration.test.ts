@@ -1,4 +1,5 @@
 import { createMachine, interpret, State } from '../src';
+import { emptyFunction } from './fixtures/utils';
 
 describe('rehydration', () => {
   describe('using persisted state', () => {
@@ -7,9 +8,9 @@ describe('rehydration', () => {
         initial: 'a',
         states: {
           a: {
-            tags: 'foo'
-          }
-        }
+            tags: 'foo',
+          },
+        },
       });
 
       const persistedState = JSON.stringify(machine.initialState);
@@ -27,9 +28,9 @@ describe('rehydration', () => {
         initial: 'a',
         states: {
           a: {
-            exit: () => actual.push('a')
-          }
-        }
+            exit: () => actual.push('a'),
+          },
+        },
       });
 
       const persistedState = JSON.stringify(machine.initialState);
@@ -44,12 +45,14 @@ describe('rehydration', () => {
       const machine = createMachine({
         on: {
           FOO: {
-            actions: () => {}
-          }
-        }
+            actions: emptyFunction,
+          },
+        },
       });
 
-      const persistedState = JSON.stringify(interpret(machine).start().state);
+      const persistedState = JSON.stringify(
+        interpret(machine).start().state,
+      );
       const restoredState = JSON.parse(persistedState);
       const service = interpret(machine).start(restoredState);
 
@@ -63,12 +66,12 @@ describe('rehydration', () => {
         initial: 'inactive',
         states: {
           inactive: {
-            on: { NEXT: 'active' }
+            on: { NEXT: 'active' },
           },
           active: {
-            tags: 'foo'
-          }
-        }
+            tags: 'foo',
+          },
+        },
       });
 
       const service = interpret(machine);
@@ -85,12 +88,12 @@ describe('rehydration', () => {
         initial: 'inactive',
         states: {
           inactive: {
-            on: { NEXT: 'active' }
+            on: { NEXT: 'active' },
           },
           active: {
-            exit: () => actual.push('active')
-          }
-        }
+            exit: () => actual.push('active'),
+          },
+        },
       });
 
       interpret(machine).start('active').stop();

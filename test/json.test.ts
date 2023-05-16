@@ -1,8 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const draft7MetaSchema = require('ajv/dist/refs/json-schema-draft-07.json');
 import Ajv from 'ajv/dist/2020';
 import * as machineSchema from '../src/machine.schema.json';
 
 const ajv = new Ajv();
-const draft7MetaSchema = require('ajv/dist/refs/json-schema-draft-07.json');
 ajv.addMetaSchema(draft7MetaSchema);
 ajv.addKeyword('definition');
 const validate = ajv.compile(machineSchema);
@@ -44,14 +45,14 @@ describe('json', () => {
               string: 'test',
               evalNumber: () => 42,
             }),
-            assign((ctx) => ({
+            assign(ctx => ({
               ...ctx,
             })),
           ],
           on: {
             TO_FOO: {
               target: ['foo', 'bar'],
-              cond: (ctx) => !!ctx.string,
+              cond: ctx => !!ctx.string,
             },
           },
           after: {

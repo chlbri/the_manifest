@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 import { createMachine, createSchema } from '../src';
 
 namespace JSONSchema {
@@ -17,19 +18,20 @@ namespace JSONSchema {
     | JSONSchema.String
     | JSONSchema.Number
     | JSONSchema.Object<string>;
-  export type TypeFrom<T extends JSONSchema.Thing> = T extends JSONSchema.String
-    ? string
-    : T extends JSONSchema.Number
-    ? number
-    : T extends JSONSchema.Object<infer Keys>
-    ? {
-        [Key in Keys]: TypeFrom<T['properties'][Key]>;
-      }
-    : unknown;
+  export type TypeFrom<T extends JSONSchema.Thing> =
+    T extends JSONSchema.String
+      ? string
+      : T extends JSONSchema.Number
+      ? number
+      : T extends JSONSchema.Object<infer Keys>
+      ? {
+          [Key in Keys]: TypeFrom<T['properties'][Key]>;
+        }
+      : unknown;
 }
 
 function fromJSONSchema<T extends JSONSchema.Thing>(
-  schema: T
+  schema: T,
 ): JSONSchema.TypeFrom<T> {
   return schema as any;
 }
@@ -48,30 +50,30 @@ describe('schema', () => {
             baz: {
               type: 'object',
               properties: {
-                one: { type: 'string' }
-              }
-            }
-          }
+                one: { type: 'string' },
+              },
+            },
+          },
         }),
-        events: createSchema<{ type: 'FOO' } | { type: 'BAR' }>()
+        events: createSchema<{ type: 'FOO' } | { type: 'BAR' }>(),
       },
       context: { foo: '', bar: 0, baz: { one: '' } },
       initial: 'active',
       states: {
         active: {
-          entry: ['asdf']
-        }
-      }
+          entry: ['asdf'],
+        },
+      },
     });
 
     noop(m.context.foo);
     noop(m.context.baz.one);
     m.transition('active', 'BAR');
 
-    // @ts-expect-error
+    // @ts-expect-error: test
     noop(m.context.something);
 
-    // @ts-expect-error
+    // @ts-expect-error: test
     m.transition('active', 'INVALID');
   });
 
@@ -80,9 +82,9 @@ describe('schema', () => {
       context: fromJSONSchema({
         type: 'object',
         properties: {
-          foo: { type: 'string' }
-        }
-      })
+          foo: { type: 'string' },
+        },
+      }),
     };
 
     const m = createMachine({
@@ -90,8 +92,8 @@ describe('schema', () => {
       context: { foo: '' },
       initial: 'active',
       states: {
-        active: {}
-      }
+        active: {},
+      },
     });
 
     expect(m.schema).toEqual(schema);

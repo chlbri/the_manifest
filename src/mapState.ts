@@ -2,7 +2,7 @@ import { matchesState } from './utils';
 
 export function mapState(
   stateMap: { [stateId: string]: any },
-  stateId: string
+  stateId: string,
 ) {
   let foundStateId;
 

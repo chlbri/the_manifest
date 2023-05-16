@@ -1,4 +1,4 @@
-import { ActionTypes } from './types';
+import { ActionTypes } from './types/types';
 
 // xstate-specific action types
 export const start = ActionTypes.Start;

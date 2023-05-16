@@ -1,5 +1,5 @@
 import { IS_PRODUCTION } from './environment';
-import { AnyInterpreter } from './types';
+import { AnyInterpreter } from './types/types';
 
 type ServiceListener = (service: AnyInterpreter) => void;
 
@@ -23,21 +23,23 @@ export function getGlobal(): typeof globalThis | undefined {
   if (typeof window !== 'undefined') {
     return window;
   }
-  // @ts-ignore
+  // @ts-ignore: global
   if (typeof global !== 'undefined') {
-    // @ts-ignore
+    // @ts-ignore: global
     return global;
   }
   if (!IS_PRODUCTION) {
     console.warn(
-      'XState could not find a global object in this environment. Please let the maintainers know and raise an issue here: https://github.com/statelyai/xstate/issues'
+      'XState could not find a global object in this environment. Please let the maintainers know and raise an issue here: https://github.com/statelyai/xstate/issues',
     );
   }
 }
 
 function getDevTools(): XStateDevInterface | undefined {
   const global = getGlobal();
-  if (global && '__xstate__' in global) {
+  const check = global && '__xstate__' in global;
+
+  if (check) {
     return (global as any).__xstate__;
   }
 

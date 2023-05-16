@@ -4,7 +4,7 @@ import {
   interpret,
   Interpreter,
   InterpreterStatus,
-  spawn
+  spawn,
 } from './interpreter';
 import { createMachine, Machine } from './Machine';
 import { mapState } from './mapState';
@@ -15,8 +15,13 @@ import { StateNode } from './StateNode';
 export { spawnBehavior } from './behaviors';
 export { XStateDevInterface } from './devTools';
 export * from './typegenTypes';
-export * from './types';
-export { matchesState, toEventObject, toObserver, toSCXMLEvent } from './utils';
+export * from './types/types';
+export {
+  matchesState,
+  toEventObject,
+  toObserver,
+  toSCXMLEvent,
+} from './utils';
 export {
   Actor,
   toActorRef,
@@ -40,7 +45,7 @@ export {
   doneInvoke,
   createMachine,
   createSchema,
-  t
+  t,
 };
 
 const {
@@ -51,7 +56,7 @@ const {
   sendUpdate,
   forwardTo,
   doneInvoke,
-  raise
+  raise,
 } = actions;
 
 declare global {

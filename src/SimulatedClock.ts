@@ -13,8 +13,8 @@ interface SimulatedTimeout {
 }
 export class SimulatedClock implements SimulatedClock {
   private timeouts: Map<number, SimulatedTimeout> = new Map();
-  private _now: number = 0;
-  private _id: number = 0;
+  private _now = 0;
+  private _id = 0;
   public now() {
     return this._now;
   }
@@ -26,7 +26,7 @@ export class SimulatedClock implements SimulatedClock {
     this.timeouts.set(id, {
       start: this.now(),
       timeout,
-      fn
+      fn,
     });
     return id;
   }
@@ -43,6 +43,7 @@ export class SimulatedClock implements SimulatedClock {
   }
   private flushTimeouts() {
     [...this.timeouts]
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .sort(([_idA, timeoutA], [_idB, timeoutB]) => {
         const endA = timeoutA.start + timeoutA.timeout;
         const endB = timeoutB.start + timeoutB.timeout;

@@ -1,4 +1,4 @@
-import { AnyInterpreter } from './types';
+import { AnyInterpreter } from './types/types';
 
 /**
  * Maintains a stack of the current service in scope.
@@ -9,7 +9,7 @@ const serviceStack = [] as Array<AnyInterpreter | undefined>;
 
 export const provide = <T, TService extends AnyInterpreter>(
   service: TService | undefined,
-  fn: (service: TService | undefined) => T
+  fn: (service: TService | undefined) => T,
 ) => {
   serviceStack.push(service);
   const result = fn(service);
@@ -18,5 +18,5 @@ export const provide = <T, TService extends AnyInterpreter>(
 };
 
 export const consume = <T, TService extends AnyInterpreter>(
-  fn: (service: TService) => T
+  fn: (service: TService) => T,
 ) => fn(serviceStack[serviceStack.length - 1] as TService);

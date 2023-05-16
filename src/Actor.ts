@@ -1,28 +1,28 @@
+import * as serviceScope from './serviceScope';
 import {
-  EventObject,
-  Subscribable,
-  InvokeDefinition,
-  AnyEventObject,
-  StateMachine,
-  Spawnable,
-  SCXML,
   ActorRef,
-  BaseActorRef
-} from './types';
+  AnyEventObject,
+  BaseActorRef,
+  EventObject,
+  InvokeDefinition,
+  SCXML,
+  Spawnable,
+  StateMachine,
+  Subscribable,
+} from './types/types';
 import {
-  symbolObservable,
   isMachine,
   mapContext,
-  toInvokeSource
+  symbolObservable,
+  toInvokeSource,
 } from './utils';
-import * as serviceScope from './serviceScope';
 
 export interface Actor<
   TContext = any,
-  TEvent extends EventObject = AnyEventObject
+  TEvent extends EventObject = AnyEventObject,
 > extends Subscribable<TContext> {
   id: string;
-  send: (event: TEvent) => any; // TODO: change to void
+  send: (event: TEvent) => void; // TODO: change to void
   stop?: () => any | undefined;
   toJSON: () => {
     id: string;
@@ -32,20 +32,20 @@ export interface Actor<
   deferred?: boolean;
 }
 
-export function createNullActor(id: string): ActorRef<any> {
+function createNullActor(id: string): ActorRef<any> {
   return {
     id,
     send: () => void 0,
     subscribe: () => ({
-      unsubscribe: () => void 0
+      unsubscribe: () => void 0,
     }),
     getSnapshot: () => undefined,
     toJSON: () => ({
-      id
+      id,
     }),
     [symbolObservable]: function () {
       return this;
-    }
+    },
   };
 }
 
@@ -59,7 +59,7 @@ export function createInvocableActor<TC, TE extends EventObject>(
   invokeDefinition: InvokeDefinition<TC, TE>,
   machine: StateMachine<TC, any, TE, any>,
   context: TC,
-  _event: SCXML.Event<TE>
+  _event: SCXML.Event<TE>,
 ): ActorRef<any> {
   const invokeSrc = toInvokeSource(invokeDefinition.src);
   const serviceCreator = machine?.options.services?.[invokeSrc.type];
@@ -70,11 +70,11 @@ export function createInvocableActor<TC, TE extends EventObject>(
     ? createDeferredActor(
         serviceCreator as Spawnable,
         invokeDefinition.id,
-        resolvedData
+        resolvedData,
       )
     : createNullActor(invokeDefinition.id);
 
-  // @ts-ignore
+  // @ts-ignore: not-important
   tempActor.meta = invokeDefinition;
 
   return tempActor;
@@ -83,18 +83,18 @@ export function createInvocableActor<TC, TE extends EventObject>(
 export function createDeferredActor(
   entity: Spawnable,
   id: string,
-  data?: any
+  data?: any,
 ): ActorRef<any, undefined> {
   const tempActor = createNullActor(id);
 
-  // @ts-ignore
+  // @ts-ignore: needed
   tempActor.deferred = true;
 
   if (isMachine(entity)) {
     // "mute" the existing service scope so potential spawned actors within the `.initialState` stay deferred here
     const initialState = ((tempActor as any).state = serviceScope.provide(
       undefined,
-      () => (data ? entity.withContext(data) : entity).initialState
+      () => (data ? entity.withContext(data) : entity).initialState,
     ));
     tempActor.getSnapshot = () => initialState;
   }
@@ -118,10 +118,11 @@ export function isSpawnedActor(item: any): item is ActorRef<any> {
 export function toActorRef<
   TEvent extends EventObject,
   TEmitted = any,
-  TActorRefLike extends BaseActorRef<TEvent> = BaseActorRef<TEvent>
+  TActorRefLike extends BaseActorRef<TEvent> = BaseActorRef<TEvent>,
 >(
-  actorRefLike: TActorRefLike
-): ActorRef<TEvent, TEmitted> & Omit<TActorRefLike, keyof ActorRef<any, any>> {
+  actorRefLike: TActorRefLike,
+): ActorRef<TEvent, TEmitted> &
+  Omit<TActorRefLike, keyof ActorRef<any, any>> {
   return {
     subscribe: () => ({ unsubscribe: () => void 0 }),
     id: 'anonymous',
@@ -129,6 +130,6 @@ export function toActorRef<
     [symbolObservable]: function () {
       return this;
     },
-    ...actorRefLike
+    ...actorRefLike,
   };
 }
