@@ -11,11 +11,8 @@ import {
   raise,
   resolveActions,
   send,
-  start,
-  stop,
   toActionObject,
   toActionObjects,
-  toActivityDefinition,
 } from './actions';
 import { STATE_DELIMITER } from './constants';
 import { IS_PRODUCTION } from './environment';
@@ -44,8 +41,6 @@ import {
   Event,
   EventObject,
   FinalStateNodeConfig,
-  HistoryStateNodeConfig,
-  HistoryValue,
   InternalMachineOptions,
   InvokeActionObject,
   InvokeCreator,
@@ -90,7 +85,6 @@ import {
   mapFilterValues,
   mapValues,
   matchesState,
-  nestedPath,
   normalizeTarget,
   partition,
   path,
@@ -102,7 +96,6 @@ import {
   toStatePaths,
   toStateValue,
   toTransitionConfigArray,
-  updateHistoryValue,
   warn,
 } from './utils';
 
@@ -111,6 +104,8 @@ const STATE_IDENTIFIER = '#';
 const WILDCARD = '*';
 
 const EMPTY_OBJECT = {};
+
+const DEFAULT_MACHINE_KEY = '(machine)';
 
 const isStateId = (str: string) => str[0] === STATE_IDENTIFIER;
 const createDefaultOptions = <TContext>(): MachineOptions<
@@ -183,7 +178,7 @@ class StateNode<
    *  - `'history'` - history state node
    *  - `'final'` - final state node
    */
-  public type: 'atomic' | 'compound' | 'parallel' | 'final' | 'history';
+  public type: 'atomic' | 'compound' | 'parallel' | 'final';
   /**
    * The string path from the root machine node to this node.
    */
@@ -192,12 +187,7 @@ class StateNode<
    * The initial state node key.
    */
   public initial?: keyof TStateSchema['states'];
-  /**
-   * (DEPRECATED) Whether the state node is a parallel state node.
-   *
-   * Use `type: 'parallel'` instead.
-   */
-  public parallel?: boolean;
+
   /**
    * Whether the state node is "transient". A state node is considered transient if it has
    * an immediate transition from a "null event" (empty string), taken upon entering the state node.
@@ -213,7 +203,6 @@ class StateNode<
    *  - `'shallow'` - recalls only top-level historical state value
    *  - `'deep'` - recalls historical state value at all levels
    */
-  public history: false | 'shallow' | 'deep';
   /**
    * The action(s) to be executed upon entering the state node.
    */
@@ -226,7 +215,6 @@ class StateNode<
    * The activities to be started upon entering the state node,
    * and stopped upon exiting the state node.
    */
-  public activities: Array<ActivityDefinition<TContext, TEvent>>;
   public strict: boolean;
   /**
    * The parent state node.
@@ -323,46 +311,41 @@ class StateNode<
       options,
     );
     this.parent = _stateInfo?.parent;
+
     this.key =
-      this.config.key || _stateInfo?.key || this.config.id || '(machine)';
+      this.config.key ||
+      _stateInfo?.key ||
+      this.config.id ||
+      DEFAULT_MACHINE_KEY;
+
     this.machine = this.parent ? this.parent.machine : (this as any);
     this.path = this.parent ? this.parent.path.concat(this.key) : [];
+
     this.delimiter =
       this.config.delimiter ||
       (this.parent ? this.parent.delimiter : STATE_DELIMITER);
+
     this.id =
       this.config.id ||
       [this.machine.key, ...this.path].join(this.delimiter);
+
     this.version = this.parent
       ? this.parent.version
       : (this.config as MachineConfig<TContext, TStateSchema, TEvent>)
           .version;
+
     this.type =
       this.config.type ||
-      (this.config.parallel
-        ? 'parallel'
-        : this.config.states && Object.keys(this.config.states).length
+      (this.config.states && Object.keys(this.config.states).length
         ? 'compound'
-        : this.config.history
-        ? 'history'
         : 'atomic');
+
     this.schema = this.parent
       ? this.machine.schema
       : (this.config as MachineConfig<TContext, TStateSchema, TEvent>)
           .schema ?? ({} as this['schema']);
+
     this.description = this.config.description;
-
-    if (!IS_PRODUCTION) {
-      warn(
-        !('parallel' in this.config),
-        `The "parallel" property is deprecated and will be removed in version 4.1. ${
-          this.config.parallel
-            ? `Replace with \`type: 'parallel'\``
-            : `Use \`type: '${this.type}'\``
-        } in the config for state node '${this.id}' instead.`,
-      );
-    }
-
     this.initial = this.config.initial;
 
     this.states = (
@@ -396,14 +379,7 @@ class StateNode<
         dfs(child);
       }
     }
-
     dfs(this);
-
-    // History config
-    this.history =
-      this.config.history === true
-        ? 'shallow'
-        : this.config.history || false;
 
     this._transient =
       !!this.config.always ||
@@ -420,15 +396,19 @@ class StateNode<
     this.onEntry = toArray(this.config.entry || this.config.onEntry).map(
       action => toActionObject(action as any),
     );
+
     // TODO: deprecate (exit)
     this.onExit = toArray(this.config.exit || this.config.onExit).map(
       action => toActionObject(action as any),
     );
+
     this.meta = this.config.meta;
+
     this.doneData =
       this.type === 'final'
         ? (this.config as FinalStateNodeConfig<TContext, TEvent>).data
         : undefined;
+
     this.invoke = toArray(this.config.invoke).map((invokeConfig, i) => {
       if (isMachine(invokeConfig)) {
         const invokeId = createInvokeId(this.id, i);
@@ -473,9 +453,7 @@ class StateNode<
         });
       }
     });
-    this.activities = toArray(this.config.activities)
-      .concat(this.invoke)
-      .map(activity => toActivityDefinition(activity));
+
     this.transition = this.transition.bind(this);
     this.tags = toArray(this.config.tags);
 
@@ -560,7 +538,6 @@ class StateNode<
       context: this.context,
       type: this.type,
       initial: this.initial,
-      history: this.history,
       states: mapValues(
         this.states,
         (state: StateNode<TContext, any, TEvent>) => state.definition,
@@ -569,7 +546,6 @@ class StateNode<
       transitions: this.transitions,
       entry: this.onEntry,
       exit: this.onExit,
-      activities: this.activities || [],
       meta: this.meta,
       order: this.order || -1,
       data: this.doneData,
@@ -1005,7 +981,7 @@ class StateNode<
 
     const allNextStateNodes = flatten(
       nextStateNodes.map(stateNode => {
-        return this.getRelativeStateNodes(stateNode, state.historyValue);
+        return this.getRelativeStateNodes(stateNode);
       }),
     );
 
@@ -1149,15 +1125,10 @@ class StateNode<
     const entryActions = entryStates
       .map(stateNode => {
         const entryActions = stateNode.onEntry;
-        const invokeActions = stateNode.activities.map(activity =>
-          start(activity),
-        );
         return {
           type: 'entry',
           actions: toActionObjects(
-            predictableExec
-              ? [...entryActions, ...invokeActions]
-              : [...invokeActions, ...entryActions],
+            entryActions,
             this.machine.options.actions as any,
           ),
         };
@@ -1172,10 +1143,7 @@ class StateNode<
     const exitActions = Array.from(exitStates).map(stateNode => ({
       type: 'exit',
       actions: toActionObjects(
-        [
-          ...stateNode.onExit,
-          ...stateNode.activities.map(activity => stop(activity as any)),
-        ],
+        stateNode.onExit,
         this.machine.options.actions as any,
       ),
     }));
@@ -1368,13 +1336,7 @@ class StateNode<
     const resolvedStateValue = willTransition
       ? getValue(this.machine, configuration)
       : undefined;
-    const historyValue = currentState
-      ? currentState.historyValue
-        ? currentState.historyValue
-        : stateTransition.source
-        ? (this.machine.historyValue(currentState.value) as HistoryValue)
-        : undefined
-      : undefined;
+
     const actionBlocks = this.getActions(
       new Set(resolvedConfiguration),
       isDone,
@@ -1451,13 +1413,6 @@ class StateNode<
       _event,
       // Persist _sessionid between states
       _sessionid: currentState ? currentState._sessionid : null,
-      historyValue: resolvedStateValue
-        ? historyValue
-          ? updateHistoryValue(historyValue, resolvedStateValue)
-          : undefined
-        : currentState
-        ? currentState.historyValue
-        : undefined,
       history:
         !resolvedStateValue || stateTransition.source
           ? currentState
@@ -1736,7 +1691,7 @@ class StateNode<
       initialStateValue = mapFilterValues(
         this.states as Record<string, StateNode<TContext, any, TEvent>>,
         state => state.initialStateValue || EMPTY_OBJECT,
-        stateNode => !(stateNode.type === 'history'),
+        stateNode => true,
       );
     } else if (this.initial !== undefined) {
       if (!this.states[this.initial as string]) {
@@ -1820,23 +1775,6 @@ class StateNode<
    */
   public get target(): StateValue | undefined {
     let target;
-    if (this.type === 'history') {
-      const historyConfig = this.config as HistoryStateNodeConfig<
-        TContext,
-        TEvent
-      >;
-      if (isString(historyConfig.target)) {
-        target = isStateId(historyConfig.target)
-          ? pathToStateValue(
-              this.machine
-                .getStateNodeById(historyConfig.target)
-                .path.slice(this.path.length - 1),
-            )
-          : historyConfig.target;
-      } else {
-        target = historyConfig.target;
-      }
-    }
 
     return target;
   }
@@ -1850,14 +1788,9 @@ class StateNode<
    */
   public getRelativeStateNodes(
     relativeStateId: StateNode<TContext, any, TEvent>,
-    historyValue?: HistoryValue,
     resolve = true,
   ): Array<StateNode<TContext, any, TEvent>> {
-    return resolve
-      ? relativeStateId.type === 'history'
-        ? relativeStateId.resolveHistory(historyValue)
-        : relativeStateId.initialStateNodes
-      : [relativeStateId];
+    return resolve ? relativeStateId.initialStateNodes : [relativeStateId];
   }
   public get initialStateNodes(): Array<
     StateNode<TContext, any, TEvent, any, any, any>
@@ -1907,10 +1840,6 @@ class StateNode<
 
     const childStateNode = this.getStateNode(stateKey);
 
-    if (childStateNode.type === 'history') {
-      return childStateNode.resolveHistory();
-    }
-
     if (!this.states[stateKey]) {
       throw new Error(
         `Child state '${stateKey}' does not exist on '${this.id}'`,
@@ -1918,81 +1847,6 @@ class StateNode<
     }
 
     return this.states[stateKey].getFromRelativePath(childStatePath);
-  }
-
-  private historyValue(
-    relativeStateValue?: StateValue | undefined,
-  ): HistoryValue | undefined {
-    if (!Object.keys(this.states).length) {
-      return undefined;
-    }
-
-    return {
-      current: relativeStateValue || this.initialStateValue,
-      states: mapFilterValues<
-        StateNode<TContext, any, TEvent>,
-        HistoryValue | undefined
-      >(
-        this.states,
-        (stateNode, key) => {
-          if (!relativeStateValue) {
-            return stateNode.historyValue();
-          }
-
-          const subStateValue = isString(relativeStateValue)
-            ? undefined
-            : relativeStateValue[key];
-
-          return stateNode.historyValue(
-            subStateValue || stateNode.initialStateValue,
-          );
-        },
-        stateNode => !stateNode.history,
-      ),
-    };
-  }
-  /**
-   * Resolves to the historical value(s) of the parent state node,
-   * represented by state nodes.
-   *
-   * @param historyValue
-   */
-  private resolveHistory(
-    historyValue?: HistoryValue,
-  ): Array<StateNode<TContext, any, TEvent, any, any, any>> {
-    if (this.type !== 'history') {
-      return [this];
-    }
-
-    const parent = this.parent!;
-
-    if (!historyValue) {
-      const historyTarget = this.target;
-      return historyTarget
-        ? flatten(
-            toStatePaths(historyTarget).map(relativeChildPath =>
-              parent.getFromRelativePath(relativeChildPath),
-            ),
-          )
-        : parent.initialStateNodes;
-    }
-
-    const subHistoryValue = nestedPath<HistoryValue>(
-      parent.path,
-      'states',
-    )(historyValue).current;
-
-    if (isString(subHistoryValue)) {
-      return [parent.getStateNode(subHistoryValue)];
-    }
-
-    return flatten(
-      toStatePaths(subHistoryValue!).map(subStatePath => {
-        return this.history === 'deep'
-          ? parent.getFromRelativePath(subStatePath)
-          : [parent.states[subStatePath[0]]];
-      }),
-    );
   }
 
   /**

@@ -613,7 +613,7 @@ export interface StateNodeConfig<
    *  - `'history'` - history state node
    *  - `'final'` - final state node
    */
-  type?: 'atomic' | 'compound' | 'parallel' | 'final' | 'history';
+  type?: 'atomic' | 'compound' | 'parallel' | 'final';
   /**
    * Indicates whether the state node is a history state node, and what
    * type of history:
@@ -747,16 +747,11 @@ export interface StateNodeDefinition<
   context: TContext;
   type: 'atomic' | 'compound' | 'parallel' | 'final' | 'history';
   initial: StateNodeConfig<TContext, TStateSchema, TEvent>['initial'];
-  history: boolean | 'shallow' | 'deep' | undefined;
   states: StatesDefinition<TContext, TStateSchema, TEvent>;
   on: TransitionDefinitionMap<TContext, TEvent>;
   transitions: Array<TransitionDefinition<TContext, TEvent>>;
   entry: Array<ActionObject<TContext, TEvent>>;
   exit: Array<ActionObject<TContext, TEvent>>;
-  /**
-   * @deprecated
-   */
-  activities: Array<ActivityDefinition<TContext, TEvent>>;
   meta: any;
   order: number;
   data?: FinalStateNodeConfig<TContext, TEvent>['data'];
