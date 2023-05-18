@@ -1,5 +1,4 @@
 import { createMachine, interpret, State } from '../src';
-import { emptyFunction } from './fixtures/utils';
 
 describe('rehydration', () => {
   describe('using persisted state', () => {
@@ -39,24 +38,6 @@ describe('rehydration', () => {
       interpret(machine).start(restoredState).stop();
 
       expect(actual).toEqual(['a', 'root']);
-    });
-
-    it('should get correct result back from `can` immediately', () => {
-      const machine = createMachine({
-        on: {
-          FOO: {
-            actions: emptyFunction,
-          },
-        },
-      });
-
-      const persistedState = JSON.stringify(
-        interpret(machine).start().state,
-      );
-      const restoredState = JSON.parse(persistedState);
-      const service = interpret(machine).start(restoredState);
-
-      expect(service.state.can('FOO')).toBe(true);
     });
   });
 

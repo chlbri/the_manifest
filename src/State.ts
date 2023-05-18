@@ -1,7 +1,6 @@
 import { StateNode } from './StateNode';
 import { initEvent } from './actions';
 import { EMPTY_ACTIVITY_MAP } from './constants';
-import { IS_PRODUCTION } from './environment';
 import { getMeta, nextEvents } from './stateUtils';
 import { TypegenDisabled, TypegenEnabled } from './typegenTypes';
 import {
@@ -13,7 +12,6 @@ import {
   HistoryValue,
   Prop,
   SCXML,
-  SimpleEventsOf,
   StateConfig,
   StateMachine,
   StateSchema,
@@ -22,7 +20,7 @@ import {
   TransitionDefinition,
   Typestate,
 } from './types/types';
-import { isString, matchesState, warn } from './utils';
+import { isString, matchesState } from './utils';
 
 export function stateValuesEqual(
   a: StateValue | undefined,
@@ -293,7 +291,7 @@ export class State<
    */
   public toStrings(
     stateValue: StateValue = this.value,
-    delimiter: string = '.',
+    delimiter = '.',
   ): string[] {
     if (isString(stateValue)) {
       return [stateValue];
@@ -310,6 +308,7 @@ export class State<
   }
 
   public toJSON() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { configuration, transitions, tags, machine, ...jsonValues } =
       this;
 
@@ -356,32 +355,5 @@ export class State<
       : string,
   ): boolean {
     return this.tags.has(tag as string);
-  }
-
-  /**
-   * Determines whether sending the `event` will cause a non-forbidden transition
-   * to be selected, even if the transitions have no actions nor
-   * change the state value.
-   *
-   * @param event The event to test
-   * @returns Whether the event will cause a transition
-   */
-  public can(event: TEvent | SimpleEventsOf<TEvent>['type']): boolean {
-    if (IS_PRODUCTION) {
-      warn(
-        !!this.machine,
-        `state.can(...) used outside of a machine-created State object; this will always return false.`,
-      );
-    }
-
-    const transitionData = this.machine?.getTransitionData(this, event);
-
-    return (
-      !!transitionData?.transitions.length &&
-      // Check that at least one transition is not forbidden
-      transitionData.transitions.some(
-        t => t.target !== undefined || t.actions.length,
-      )
-    );
   }
 }
