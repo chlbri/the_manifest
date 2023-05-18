@@ -14,9 +14,11 @@ import {
 export interface TypegenDisabled {
   '@@xstate/typegen': false;
 }
+
 export interface TypegenEnabled {
   '@@xstate/typegen': true;
 }
+
 export interface TypegenMeta extends TypegenEnabled {
   /**
    * Allows you to specify all the results of state.matches
