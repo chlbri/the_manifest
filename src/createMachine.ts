@@ -63,7 +63,7 @@ type ParallelConfig = {
   states: Record<string, ParallelConfig>;
 } & BaseStateConfig;
 
-type Config<S extends Services> = {
+type Config<S extends Services = Services> = {
   /**
    * The relative key of the state node, which represents its location in the overall state value.
    * This is automatically determined by the configuration shape via the key where it was defined.
@@ -81,4 +81,4 @@ type Config<S extends Services> = {
   type?: 'compound' | 'parallel';
 };
 
-export function createMachine<Config, Options>() {}
+export function createMachine<C extends Config>() {}
