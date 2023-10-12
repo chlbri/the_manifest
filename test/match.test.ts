@@ -4,7 +4,7 @@ import {
   matchesState,
   Machine,
   createMachine,
-  assign
+  assign,
 } from '../src';
 
 describe('matchState()', () => {
@@ -17,10 +17,10 @@ describe('matchState()', () => {
         [
           ['b', () => false],
           ['a', () => true],
-          [{ a: 'b' }, () => false]
+          [{ a: 'b' }, () => false],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
   });
 
@@ -31,10 +31,10 @@ describe('matchState()', () => {
         [
           ['b', () => false],
           ['a', () => true],
-          [{ a: 'b' }, () => false]
+          [{ a: 'b' }, () => false],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
   });
 
@@ -48,10 +48,10 @@ describe('matchState()', () => {
           ['b', () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b' }, () => true],
-          ['a', () => false]
+          ['a', () => false],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
   });
 
@@ -65,17 +65,17 @@ describe('matchState()', () => {
           ['b', () => false],
           [{ a: { b: 'c' } }, () => false],
           ['a', () => true],
-          [{ a: 'b' }, () => false]
+          [{ a: 'b' }, () => false],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
   });
 
   it('should match a value from a pattern with the state (parallel)', () => {
     const simpleState = State.from(
       { a: 'b', c: { d: 'e', f: 'g' } },
-      undefined
+      undefined,
     );
 
     expect(
@@ -85,10 +85,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           ['a', () => true],
-          [{ a: 'b' }, () => false]
+          [{ a: 'b' }, () => false],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -98,10 +98,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ a: 'b' }, () => true]
+          [{ a: 'b' }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -111,10 +111,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ a: 'b', c: {} }, () => true]
+          [{ a: 'b', c: {} }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -124,10 +124,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ a: 'b', c: { d: 'e' } }, () => true]
+          [{ a: 'b', c: { d: 'e' } }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -137,10 +137,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ a: 'b', c: { d: 'e', f: 'g' } }, () => true]
+          [{ a: 'b', c: { d: 'e', f: 'g' } }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -150,10 +150,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ c: {} }, () => true]
+          [{ c: {} }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -163,10 +163,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ c: { d: 'e' } }, () => true]
+          [{ c: { d: 'e' } }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
 
     expect(
@@ -176,10 +176,10 @@ describe('matchState()', () => {
           [{ a: {}, b: {} }, () => false],
           [{ a: { b: 'c' } }, () => false],
           [{ a: 'b', c: 'e' }, () => false],
-          [{ c: { d: 'e', f: 'g' } }, () => true]
+          [{ c: { d: 'e', f: 'g' } }, () => true],
         ],
-        (_) => false
-      )
+        _ => false,
+      ),
     ).toBeTruthy();
   });
 
@@ -187,7 +187,7 @@ describe('matchState()', () => {
     const simpleState = State.from('a', undefined);
 
     expect(
-      matchState(simpleState, [['b', () => false]], (_) => true)
+      matchState(simpleState, [['b', () => false]], _ => true),
     ).toBeTruthy();
   });
 });
@@ -203,26 +203,28 @@ describe('matchesState()', () => {
 
   it('should return true if two state values are equivalent', () => {
     expect(matchesState({ a: 'b' }, { a: 'b' })).toBeTruthy();
-    expect(matchesState({ a: { b: 'c' } }, { a: { b: 'c' } })).toBeTruthy();
+    expect(
+      matchesState({ a: { b: 'c' } }, { a: { b: 'c' } }),
+    ).toBeTruthy();
   });
 
   it('should return true if two parallel states are equivalent', () => {
     expect(
       matchesState(
         { a: { b1: 'foo', b2: 'bar' } },
-        { a: { b1: 'foo', b2: 'bar' } }
-      )
+        { a: { b1: 'foo', b2: 'bar' } },
+      ),
     ).toBeTruthy();
 
     expect(
       matchesState(
         { a: { b1: 'foo', b2: 'bar' }, b: { b3: 'baz', b4: 'quo' } },
-        { a: { b1: 'foo', b2: 'bar' }, b: { b3: 'baz', b4: 'quo' } }
-      )
+        { a: { b1: 'foo', b2: 'bar' }, b: { b3: 'baz', b4: 'quo' } },
+      ),
     ).toBeTruthy();
 
     expect(
-      matchesState({ a: 'foo', b: 'bar' }, { a: 'foo', b: 'bar' })
+      matchesState({ a: 'foo', b: 'bar' }, { a: 'foo', b: 'bar' }),
     ).toBeTruthy();
   });
 
@@ -236,7 +238,7 @@ describe('matchesState()', () => {
     expect(matchesState('b', { b: 'b1' })).toBeTruthy();
 
     expect(
-      matchesState({ foo: 'bar' }, { foo: { bar: { baz: 'quo' } } })
+      matchesState({ foo: 'bar' }, { foo: { bar: { baz: 'quo' } } }),
     ).toBeTruthy();
   });
 
@@ -246,8 +248,8 @@ describe('matchesState()', () => {
     expect(
       matchesState(
         { foo: 'bar', fooAgain: 'barAgain' },
-        { foo: { bar: { baz: 'quo' } }, fooAgain: { barAgain: 'baz' } }
-      )
+        { foo: { bar: { baz: 'quo' } }, fooAgain: { barAgain: 'baz' } },
+      ),
     ).toBeTruthy();
   });
 
@@ -260,7 +262,9 @@ describe('matchesState()', () => {
   it('should return false if parent state is more specific than child state', () => {
     expect(!matchesState('a.b.c', 'a.b')).toBeTruthy();
 
-    expect(!matchesState({ a: { b: { c: 'd' } } }, { a: 'b' })).toBeTruthy();
+    expect(
+      !matchesState({ a: { b: { c: 'd' } } }, { a: 'b' }),
+    ).toBeTruthy();
   });
 
   it('should return false if two state values are not equivalent', () => {
@@ -277,7 +281,10 @@ describe('matchesState()', () => {
     expect(!matchesState('a', { b: 'b1' })).toBeTruthy();
 
     expect(
-      !matchesState({ foo: { false: 'baz' } }, { foo: { bar: { baz: 'quo' } } })
+      !matchesState(
+        { foo: { false: 'baz' } },
+        { foo: { bar: { baz: 'quo' } } },
+      ),
     ).toBeTruthy();
   });
 
@@ -297,12 +304,12 @@ describe('matches() method', () => {
             bar: {
               initial: 'baz',
               states: {
-                baz: {}
-              }
-            }
-          }
-        }
-      }
+                baz: {},
+              },
+            },
+          },
+        },
+      },
     });
 
     expect(machine.initialState.matches('foo')).toBeTruthy();
@@ -333,11 +340,11 @@ describe('matches() method', () => {
           initial: 'one',
           states: {
             one: {},
-            two: {}
-          }
+            two: {},
+          },
         },
-        loaded: {}
-      }
+        loaded: {},
+      },
     });
 
     const init = machine.initialState;
@@ -357,13 +364,13 @@ describe('matches() method', () => {
     const toggleMachine = createMachine<{ foo: number }>({
       id: 'toggle',
       context: {
-        foo: 0
+        foo: 0,
       },
       initial: 'a',
       states: {
         a: { on: { TOGGLE: 'b' } },
-        b: { on: { TOGGLE: 'a' } }
-      }
+        b: { on: { TOGGLE: 'a' } },
+      },
     });
 
     const state = toggleMachine.initialState;
@@ -377,7 +384,7 @@ describe('matches() method', () => {
     }
   });
 
-  it('should compile with a typestate value that is a union', (done) => {
+  it('should compile with a typestate value that is a union', done => {
     interface MachineContext {
       countObject:
         | {
@@ -405,31 +412,31 @@ describe('matches() method', () => {
     >({
       initial: 'active',
       context: {
-        countObject: { count: 0 }
+        countObject: { count: 0 },
       },
       states: {
         inactive: {
           entry: assign({
-            countObject: undefined
+            countObject: undefined,
           }),
-          on: { TOGGLE: 'active' }
+          on: { TOGGLE: 'active' },
         },
         active: {
           entry: assign({
-            countObject: (ctx) => ({
-              count: (ctx.countObject?.count ?? 0) + 1
-            })
+            countObject: ctx => ({
+              count: (ctx.countObject?.count ?? 0) + 1,
+            }),
           }),
-          on: { TOGGLE: 'other' }
+          on: { TOGGLE: 'other' },
         },
         other: {
           on: { TOGGLE: 'active' },
           initial: 'one',
           states: {
-            one: {}
-          }
-        }
-      }
+            one: {},
+          },
+        },
+      },
     });
 
     const state = machine.initialState;

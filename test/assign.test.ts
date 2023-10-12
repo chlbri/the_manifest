@@ -1,4 +1,10 @@
-import { Machine, interpret, assign, sendParent, createMachine } from '../src';
+import {
+  Machine,
+  interpret,
+  assign,
+  sendParent,
+  createMachine,
+} from '../src';
 import { sendTo } from '../src/actions';
 
 interface CounterContext {
@@ -16,20 +22,20 @@ const counterMachine = Machine<CounterContext>({
         INC: [
           {
             target: 'counting',
-            actions: assign((ctx) => ({
-              count: ctx.count + 1
-            }))
-          }
+            actions: assign(ctx => ({
+              count: ctx.count + 1,
+            })),
+          },
         ],
         DEC: [
           {
             target: 'counting',
             actions: [
               assign({
-                count: (ctx) => ctx.count - 1
-              })
-            ]
-          }
+                count: ctx => ctx.count - 1,
+              }),
+            ],
+          },
         ],
         WIN_PROP: [
           {
@@ -37,10 +43,10 @@ const counterMachine = Machine<CounterContext>({
             actions: [
               assign({
                 count: () => 100,
-                foo: () => 'win'
-              })
-            ]
-          }
+                foo: () => 'win',
+              }),
+            ],
+          },
         ],
         WIN_STATIC: [
           {
@@ -48,10 +54,10 @@ const counterMachine = Machine<CounterContext>({
             actions: [
               assign({
                 count: 100,
-                foo: 'win'
-              })
-            ]
-          }
+                foo: 'win',
+              }),
+            ],
+          },
         ],
         WIN_MIX: [
           {
@@ -59,10 +65,10 @@ const counterMachine = Machine<CounterContext>({
             actions: [
               assign({
                 count: () => 100,
-                foo: 'win'
-              })
-            ]
-          }
+                foo: 'win',
+              }),
+            ],
+          },
         ],
         WIN: [
           {
@@ -70,30 +76,30 @@ const counterMachine = Machine<CounterContext>({
             actions: [
               assign(() => ({
                 count: 100,
-                foo: 'win'
-              }))
-            ]
-          }
+                foo: 'win',
+              })),
+            ],
+          },
         ],
         SET_MAYBE: [
           {
             actions: [
               assign<CounterContext>({
-                maybe: 'defined'
-              })
-            ]
-          }
-        ]
-      }
-    }
-  }
+                maybe: 'defined',
+              }),
+            ],
+          },
+        ],
+      },
+    },
+  },
 });
 
 describe('assign', () => {
   it('applies the assignment to the external state (property assignment)', () => {
     const oneState = counterMachine.transition(
       counterMachine.initialState,
-      'DEC'
+      'DEC',
     );
 
     expect(oneState.value).toEqual('counting');
@@ -108,7 +114,7 @@ describe('assign', () => {
   it('applies the assignment to the external state', () => {
     const oneState = counterMachine.transition(
       counterMachine.initialState,
-      'INC'
+      'INC',
     );
 
     expect(oneState.value).toEqual('counting');
@@ -123,7 +129,7 @@ describe('assign', () => {
   it('applies the assignment to multiple properties (property assignment)', () => {
     const nextState = counterMachine.transition(
       counterMachine.initialState,
-      'WIN_PROP'
+      'WIN_PROP',
     );
 
     expect(nextState.context).toEqual({ count: 100, foo: 'win' });
@@ -132,7 +138,7 @@ describe('assign', () => {
   it('applies the assignment to multiple properties (static)', () => {
     const nextState = counterMachine.transition(
       counterMachine.initialState,
-      'WIN_STATIC'
+      'WIN_STATIC',
     );
 
     expect(nextState.context).toEqual({ count: 100, foo: 'win' });
@@ -141,7 +147,7 @@ describe('assign', () => {
   it('applies the assignment to multiple properties (static + prop assignment)', () => {
     const nextState = counterMachine.transition(
       counterMachine.initialState,
-      'WIN_MIX'
+      'WIN_MIX',
     );
 
     expect(nextState.context).toEqual({ count: 100, foo: 'win' });
@@ -150,7 +156,7 @@ describe('assign', () => {
   it('applies the assignment to multiple properties', () => {
     const nextState = counterMachine.transition(
       counterMachine.initialState,
-      'WIN'
+      'WIN',
     );
 
     expect(nextState.context).toEqual({ count: 100, foo: 'win' });
@@ -160,7 +166,7 @@ describe('assign', () => {
     const oneState = counterMachine.transition(
       counterMachine.initialState,
       'DEC',
-      { count: 50, foo: 'bar' }
+      { count: 50, foo: 'bar' },
     );
 
     expect(oneState.value).toEqual('counting');
@@ -173,7 +179,7 @@ describe('assign', () => {
 
     const threeState = counterMachine.transition(twoState, 'DEC', {
       count: 100,
-      foo: 'bar'
+      foo: 'bar',
     });
 
     expect(threeState.value).toEqual('counting');
@@ -184,7 +190,7 @@ describe('assign', () => {
     const oneState = counterMachine.transition(
       counterMachine.initialState,
       'INC',
-      { count: 50, foo: 'bar' }
+      { count: 50, foo: 'bar' },
     );
 
     expect(oneState.value).toEqual('counting');
@@ -197,7 +203,7 @@ describe('assign', () => {
 
     const threeState = counterMachine.transition(twoState, 'INC', {
       count: 102,
-      foo: 'bar'
+      foo: 'bar',
     });
 
     expect(threeState.value).toEqual('counting');
@@ -207,7 +213,10 @@ describe('assign', () => {
   it('should maintain state after unhandled event', () => {
     const { initialState } = counterMachine;
 
-    const nextState = counterMachine.transition(initialState, 'FAKE_EVENT');
+    const nextState = counterMachine.transition(
+      initialState,
+      'FAKE_EVENT',
+    );
 
     expect(nextState.context).toBeDefined();
     expect(nextState.context).toEqual({ count: 0, foo: 'bar' });
@@ -222,7 +231,7 @@ describe('assign', () => {
     expect(nextState.context).toEqual({
       count: 0,
       foo: 'bar',
-      maybe: 'defined'
+      maybe: 'defined',
     });
   });
 
@@ -233,22 +242,25 @@ describe('assign', () => {
     >({
       initial: 'active',
       context: {
-        count: 0
+        count: 0,
       },
       states: {
         active: {
           on: {
             INC: {
               actions: assign({
-                count: (_, event) => event.value
-              })
-            }
-          }
-        }
-      }
+                count: (_, event) => event.value,
+              }),
+            },
+          },
+        },
+      },
     });
 
-    const nextState = machine.transition(undefined, { type: 'INC', value: 30 });
+    const nextState = machine.transition(undefined, {
+      type: 'INC',
+      value: 30,
+    });
 
     expect(nextState.context.count).toEqual(30);
   });
@@ -264,7 +276,7 @@ describe('assign meta', () => {
         entry: assign({
           count: (_, __, { state }) => {
             return state === undefined ? 1 : -1;
-          }
+          },
         }),
         meta: { test: 3 },
         on: {
@@ -273,25 +285,25 @@ describe('assign meta', () => {
             actions: assign({
               count: (_, __, { state }) => {
                 return state ? state.meta['assign.start'].test : -1;
-              }
-            })
+              },
+            }),
           },
           NEXT_FN: {
             target: 'two',
             actions: assign((_, __, { state }) => ({
-              count: state ? state.meta['assign.start'].test : -1
-            }))
+              count: state ? state.meta['assign.start'].test : -1,
+            })),
           },
           NEXT_ASSIGNER: {
             target: 'two',
             actions: assign((_, __, { action }) => ({
-              count: action.assignment ? 5 : -1
-            }))
-          }
-        }
+              count: action.assignment ? 5 : -1,
+            })),
+          },
+        },
       },
-      two: {}
-    }
+      two: {},
+    },
   });
 
   it('should provide the state in regular transitions (prop assigner)', () => {
@@ -332,49 +344,49 @@ describe('assign meta', () => {
     const assignEventLog = assign<Ctx>((ctx, event, meta) => ({
       eventLog: ctx.eventLog.concat({
         event: event.type,
-        origin: meta._event.origin
-      })
+        origin: meta._event.origin,
+      }),
     }));
 
     const childMachine = Machine({
       initial: 'bar',
       states: {
-        bar: {}
+        bar: {},
       },
       on: {
         PING: {
-          actions: [sendParent('PONG')]
-        }
-      }
+          actions: [sendParent('PONG')],
+        },
+      },
     });
 
     const parentMachine = Machine<Ctx>({
       initial: 'foo',
       context: {
-        eventLog: []
+        eventLog: [],
       },
       states: {
         foo: {
           invoke: {
             id: 'child',
-            src: childMachine
-          }
-        }
+            src: childMachine,
+          },
+        },
       },
       on: {
         PING_CHILD: {
-          actions: [sendTo('child', 'PING'), assignEventLog]
+          actions: [sendTo('child', 'PING'), assignEventLog],
         },
         '*': {
-          actions: [assignEventLog]
-        }
-      }
+          actions: [assignEventLog],
+        },
+      },
     });
 
     let state: any;
 
     const service = interpret(parentMachine)
-      .onTransition((s) => {
+      .onTransition(s => {
         state = s;
       })
       .start();
@@ -387,8 +399,8 @@ describe('assign meta', () => {
         { event: 'PING_CHILD', origin: undefined },
         { event: 'PONG', origin: expect.stringMatching(/.+/) },
         { event: 'PING_CHILD', origin: undefined },
-        { event: 'PONG', origin: expect.stringMatching(/.+/) }
-      ]
+        { event: 'PONG', origin: expect.stringMatching(/.+/) },
+      ],
     });
   });
 });

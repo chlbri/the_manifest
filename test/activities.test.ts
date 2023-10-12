@@ -8,30 +8,30 @@ const lightMachine = Machine({
     green: {
       activities: ['fadeInGreen'],
       on: {
-        TIMER: 'yellow'
-      }
+        TIMER: 'yellow',
+      },
     },
     yellow: {
       on: {
-        TIMER: 'red'
-      }
+        TIMER: 'red',
+      },
     },
     red: {
       initial: 'walk',
       activities: ['activateCrosswalkLight'],
       on: {
-        TIMER: 'green'
+        TIMER: 'green',
       },
       states: {
         walk: { on: { PED_WAIT: 'wait' } },
         wait: {
           activities: ['blinkCrosswalkLight'],
-          on: { PED_STOP: 'stop' }
+          on: { PED_STOP: 'stop' },
         },
-        stop: {}
-      }
-    }
-  }
+        stop: {},
+      },
+    },
+  },
 });
 
 describe('activities with guarded transitions', () => {
@@ -42,18 +42,18 @@ describe('activities with guarded transitions', () => {
       states: {
         A: {
           on: {
-            E: 'B'
-          }
+            E: 'B',
+          },
         },
         B: {
           on: {
-            '': [{ cond: () => false, target: 'A' }]
+            '': [{ cond: () => false, target: 'A' }],
           },
-          activities: ['B_ACTIVITY']
-        }
-      }
+          activities: ['B_ACTIVITY'],
+        },
+      },
     },
-    { activities: { B_ACTIVITY } }
+    { activities: { B_ACTIVITY } },
   );
 
   it('should activate even if there are subsequent automatic, but blocked transitions', () => {
@@ -61,7 +61,11 @@ describe('activities with guarded transitions', () => {
     state = machine.transition(state, 'E');
     expect(state.activities.B_ACTIVITY).toBeTruthy();
     expect(state.actions).toEqual([
-      start({ type: 'B_ACTIVITY', id: 'B_ACTIVITY', exec: undefined } as any)
+      start({
+        type: 'B_ACTIVITY',
+        id: 'B_ACTIVITY',
+        exec: undefined,
+      } as any),
     ]);
   });
 });
@@ -72,16 +76,16 @@ describe('remembering activities', () => {
     states: {
       A: {
         on: {
-          E: 'B'
-        }
+          E: 'B',
+        },
       },
       B: {
         on: {
-          E: 'A'
+          E: 'A',
         },
-        activities: ['B_ACTIVITY']
-      }
-    }
+        activities: ['B_ACTIVITY'],
+      },
+    },
   });
 
   it('should remember the activities even after an event', () => {
@@ -134,7 +138,7 @@ describe('activities', () => {
 
     expect(nextState.actions).toEqual([
       stop('activateCrosswalkLight'),
-      start('fadeInGreen')
+      start('fadeInGreen'),
     ]);
   });
 });
@@ -150,26 +154,26 @@ describe('transient activities', () => {
           A1: {
             activities: ['A1'],
             on: {
-              A: 'AWAIT'
-            }
+              A: 'AWAIT',
+            },
           },
           AWAIT: {
             activities: ['AWAIT'],
             on: {
-              '': 'A2'
-            }
+              '': 'A2',
+            },
           },
           A2: {
             activities: ['A2'],
             on: {
-              A: 'A1'
-            }
-          }
+              A: 'A1',
+            },
+          },
         },
         on: {
           A1: '.A1',
-          A2: '.A2'
-        }
+          A2: '.A2',
+        },
       },
       B: {
         initial: 'B1',
@@ -181,23 +185,23 @@ describe('transient activities', () => {
               '': [
                 {
                   in: 'A.AWAIT',
-                  target: 'B2'
-                }
+                  target: 'B2',
+                },
               ],
-              B: 'B2'
-            }
+              B: 'B2',
+            },
           },
           B2: {
             activities: ['B2'],
             on: {
-              B: 'B1'
-            }
-          }
+              B: 'B1',
+            },
+          },
         },
         on: {
           B1: '.B1',
-          B2: '.B2'
-        }
+          B2: '.B2',
+        },
       },
       C: {
         initial: 'C1',
@@ -206,15 +210,15 @@ describe('transient activities', () => {
             activities: ['C1'],
             on: {
               C: 'C1',
-              C_SIMILAR: 'C2'
-            }
+              C_SIMILAR: 'C2',
+            },
           },
           C2: {
-            activities: ['C1']
-          }
-        }
-      }
-    }
+            activities: ['C1'],
+          },
+        },
+      },
+    },
   });
 
   it('should have started initial activities', () => {

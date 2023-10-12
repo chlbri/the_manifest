@@ -102,7 +102,7 @@ describe('deterministic machine', () => {
   describe('machine.transition()', () => {
     it('should properly transition states based on string event', () => {
       expect(lightMachine.transition('green', 'TIMER').value).toEqual(
-        'yellow'
+        'yellow',
       );
     });
 
@@ -112,22 +112,22 @@ describe('deterministic machine', () => {
       };
 
       expect(lightMachine.transition('green', event).value).toEqual(
-        'yellow'
+        'yellow',
       );
     });
 
     it('should not transition states for illegal transitions', () => {
       expect(lightMachine.transition('green', 'FAKE').value).toEqual(
-        'green'
+        'green',
       );
       expect(
-        lightMachine.transition('green', 'FAKE').actions
+        lightMachine.transition('green', 'FAKE').actions,
       ).toHaveLength(0);
     });
 
     it('should throw an error if not given an event', () => {
       expect(() =>
-        lightMachine.transition('red', undefined as any)
+        lightMachine.transition('red', undefined as any),
       ).toThrow();
     });
 
@@ -145,13 +145,13 @@ describe('deterministic machine', () => {
 
     it('should use the machine.initialState when an undefined state is given', () => {
       expect(lightMachine.transition(undefined, 'TIMER').value).toEqual(
-        'yellow'
+        'yellow',
       );
     });
 
     it('should use the machine.initialState when an undefined state is given (unhandled event)', () => {
       expect(lightMachine.transition(undefined, 'TIMER').value).toEqual(
-        'yellow'
+        'yellow',
       );
     });
   });
@@ -159,13 +159,13 @@ describe('deterministic machine', () => {
   describe('machine.transition() with nested states', () => {
     it('should properly transition a nested state', () => {
       expect(
-        lightMachine.transition('red.walk', 'PED_COUNTDOWN').value
+        lightMachine.transition('red.walk', 'PED_COUNTDOWN').value,
       ).toEqual({ red: 'wait' });
     });
 
     it('should transition from initial nested states', () => {
       expect(
-        lightMachine.transition('red', 'PED_COUNTDOWN').value
+        lightMachine.transition('red', 'PED_COUNTDOWN').value,
       ).toEqual({
         red: 'wait',
       });
@@ -173,7 +173,7 @@ describe('deterministic machine', () => {
 
     it('should transition from deep initial nested states', () => {
       expect(
-        lightMachine.transition('red', 'PED_COUNTDOWN').value
+        lightMachine.transition('red', 'PED_COUNTDOWN').value,
       ).toEqual({
         red: 'wait',
       });
@@ -181,7 +181,7 @@ describe('deterministic machine', () => {
 
     it('should bubble up events that nested states cannot handle', () => {
       expect(lightMachine.transition('red.stop', 'TIMER').value).toEqual(
-        'green'
+        'green',
       );
     });
 
@@ -190,7 +190,7 @@ describe('deterministic machine', () => {
         red: 'walk',
       });
       expect(
-        lightMachine.transition('red.walk', 'FAKE').actions
+        lightMachine.transition('red.walk', 'FAKE').actions,
       ).toHaveLength(0);
 
       expect(deepMachine.transition('a1', 'FAKE').value).toEqual({
@@ -208,7 +208,7 @@ describe('deterministic machine', () => {
     it('should return the equivalent state if no transition occurs', () => {
       const initialState = lightMachine.transition(
         lightMachine.initialState,
-        'NOTHING'
+        'NOTHING',
       );
       const nextState = lightMachine.transition(initialState, 'NOTHING');
 
@@ -250,7 +250,7 @@ describe('deterministic machine', () => {
 
     it('should work with substate nodes that have the same key', () => {
       expect(
-        machine.transition(machine.initialState, 'NEXT').value
+        machine.transition(machine.initialState, 'NEXT').value,
       ).toEqual('test');
     });
   });

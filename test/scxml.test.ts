@@ -14,8 +14,8 @@ import { pathsToStateValue } from '../src/utils';
 
 const TEST_FRAMEWORK = path.dirname(
   pkgUp.sync({
-    cwd: require.resolve('@scion-scxml/test-framework')
-  }) as string
+    cwd: require.resolve('@scion-scxml/test-framework'),
+  }) as string,
 );
 
 const testGroups: Record<string, string[]> = {
@@ -29,7 +29,7 @@ const testGroups: Record<string, string[]> = {
     'send7b',
     'send8',
     'send8b',
-    'send9'
+    'send9',
   ],
   assign: [
     // 'assign_invalid', // TODO: handle error.execution event
@@ -40,13 +40,13 @@ const testGroups: Record<string, string[]> = {
     'test1',
     'test2',
     'test3',
-    'test4'
+    'test4',
   ],
   basic: ['basic0', 'basic1', 'basic2'],
   'cond-js': ['test0', 'test1', 'test2', 'TestConditionalTransition'],
   data: [
     // 'data_invalid',
-    'data_obj_literal'
+    'data_obj_literal',
   ],
   'default-initial-state': ['initial1', 'initial2'],
   delayedSend: ['send1', 'send2', 'send3'],
@@ -67,7 +67,7 @@ const testGroups: Record<string, string[]> = {
     // 'history4', // TODO: support history nodes on parallel states
     'history4b',
     'history5',
-    'history6'
+    'history6',
   ],
   'if-else': [
     // 'test0', // microstep not implemented correctly
@@ -92,7 +92,7 @@ const testGroups: Record<string, string[]> = {
     'test8',
     'test9',
     'test10',
-    'test10b'
+    'test10b',
   ],
   'multiple-events-per-transition': [
     // 'test1'
@@ -131,12 +131,12 @@ const testGroups: Record<string, string[]> = {
     'test28',
     'test29',
     'test30',
-    'test31'
+    'test31',
   ],
   // script: ['test0', 'test1', 'test2'], // <script/> conversion not implemented
   // 'script-src': ['test0', 'test1', 'test2', 'test3'], // <script/> conversion not implemented
   'scxml-prefix-event-name-matching': [
-    'star0'
+    'star0',
     // prefix event matching not implemented yet
     // 'test0',
     // 'test1'
@@ -330,19 +330,19 @@ const testGroups: Record<string, string[]> = {
     // 'test561.txml',
     // 'test562.txml',
     // 'test569.txml',
-    'test570.txml'
+    'test570.txml',
     // 'test576.txml'
     // 'test578.txml',
     // 'test579.txml',
     // 'test580.txml',
-  ]
+  ],
 };
 
 const overrides: Record<string, string[]> = {
   'assign-current-small-step': [
     // original using <script/> to manipulate datamodel
-    'test0'
-  ]
+    'test0',
+  ],
 };
 
 interface SCIONTest {
@@ -354,12 +354,14 @@ interface SCIONTest {
   }>;
 }
 
-async function runW3TestToCompletion(machine: AnyStateMachine): Promise<void> {
+async function runW3TestToCompletion(
+  machine: AnyStateMachine,
+): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     let nextState: AnyState;
 
     interpret(machine)
-      .onTransition((state) => {
+      .onTransition(state => {
         nextState = state;
       })
       .onDone(() => {
@@ -375,7 +377,7 @@ async function runW3TestToCompletion(machine: AnyStateMachine): Promise<void> {
 
 async function runTestToCompletion(
   machine: AnyStateMachine,
-  test: SCIONTest
+  test: SCIONTest,
 ): Promise<void> {
   if (!test.events.length && test.initialConfiguration[0] === 'pass') {
     await runW3TestToCompletion(machine);
@@ -383,15 +385,17 @@ async function runTestToCompletion(
   }
   const resolvedStateValue = machine.resolve(
     pathsToStateValue(
-      test.initialConfiguration.map((id) => machine.getStateNodeById(id).path)
-    )
+      test.initialConfiguration.map(
+        id => machine.getStateNodeById(id).path,
+      ),
+    ),
   );
   let done = false;
   let nextState: AnyState = machine.getInitialState(resolvedStateValue);
   const service = interpret(machine, {
-    clock: new SimulatedClock()
+    clock: new SimulatedClock(),
   })
-    .onTransition((state) => {
+    .onTransition(state => {
       nextState = state;
     })
     .onDone(() => {
@@ -410,7 +414,7 @@ async function runTestToCompletion(
 
     const stateIds = machine
       .getStateNodes(nextState)
-      .map((stateNode) => stateNode.id);
+      .map(stateNode => stateNode.id);
 
     expect(stateIds).toContain(nextConfiguration[0]);
   });
@@ -420,8 +424,8 @@ describe('scxml', () => {
   const testGroupKeys = Object.keys(testGroups);
   // const testGroupKeys = ['scxml-prefix-event-name-matching'];
 
-  testGroupKeys.forEach((testGroupName) => {
-    testGroups[testGroupName].forEach((testName) => {
+  testGroupKeys.forEach(testGroupName => {
+    testGroups[testGroupName].forEach(testName => {
       const scxmlSource =
         overrides[testGroupName] &&
         overrides[testGroupName].indexOf(testName) !== -1
@@ -429,21 +433,21 @@ describe('scxml', () => {
           : `${TEST_FRAMEWORK}/test/${testGroupName}/${testName}.scxml`;
       const scxmlDefinition = fs.readFileSync(
         path.resolve(__dirname, scxmlSource),
-        { encoding: 'utf-8' }
+        { encoding: 'utf-8' },
       );
       const scxmlTest = JSON.parse(
         fs.readFileSync(
           path.resolve(
             __dirname,
-            `${TEST_FRAMEWORK}/test/${testGroupName}/${testName}.json`
+            `${TEST_FRAMEWORK}/test/${testGroupName}/${testName}.json`,
           ),
-          { encoding: 'utf-8' }
-        )
+          { encoding: 'utf-8' },
+        ),
       ) as SCIONTest;
 
       it(`${testGroupName}/${testName}`, async () => {
         const machine = toMachine(scxmlDefinition, {
-          delimiter: '$'
+          delimiter: '$',
         });
 
         // console.dir(machine.config, { depth: null });

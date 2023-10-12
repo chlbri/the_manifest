@@ -4,7 +4,7 @@ import { toSCXMLEvent } from '../src/utils';
 const { actionTypes } = actions;
 
 describe('action creators', () => {
-  (['start', 'stop'] as const).forEach((actionKey) => {
+  (['start', 'stop'] as const).forEach(actionKey => {
     describe(`${actionKey}()`, () => {
       it('should accept a string action', () => {
         const action = (actions[actionKey] as any)('test');
@@ -15,33 +15,15 @@ describe('action creators', () => {
           activity: {
             type: 'test',
             exec: undefined,
-            id: 'test'
-          }
+            id: 'test',
+          },
         });
       });
 
       it('should accept an action object', () => {
         const action = (actions[actionKey] as any)({
           type: 'test',
-          foo: 'bar'
-        } as any);
-        expect(action.type).toEqual(actionTypes[actionKey]);
-        expect(action).toEqual({
-          type: actionTypes[actionKey],
-          exec: undefined,
-          activity: {
-            type: 'test',
-            id: undefined,
-            foo: 'bar'
-          }
-        });
-      });
-
-      it('should accept an activity definition', () => {
-        const action = (actions[actionKey] as any)({
-          type: 'test',
           foo: 'bar',
-          src: 'someSrc'
         } as any);
         expect(action.type).toEqual(actionTypes[actionKey]);
         expect(action).toEqual({
@@ -51,8 +33,26 @@ describe('action creators', () => {
             type: 'test',
             id: undefined,
             foo: 'bar',
-            src: 'someSrc'
-          }
+          },
+        });
+      });
+
+      it('should accept an activity definition', () => {
+        const action = (actions[actionKey] as any)({
+          type: 'test',
+          foo: 'bar',
+          src: 'someSrc',
+        } as any);
+        expect(action.type).toEqual(actionTypes[actionKey]);
+        expect(action).toEqual({
+          type: actionTypes[actionKey],
+          exec: undefined,
+          activity: {
+            type: 'test',
+            id: undefined,
+            foo: 'bar',
+            src: 'someSrc',
+          },
         });
       });
     });
@@ -66,7 +66,7 @@ describe('action creators', () => {
         type: actionTypes.send,
         event: { type: 'foo' },
         delay: undefined,
-        id: 'foo'
+        id: 'foo',
       });
     });
 
@@ -77,7 +77,7 @@ describe('action creators', () => {
         type: actionTypes.send,
         event: { type: 'foo', bar: 'baz' },
         delay: undefined,
-        id: 'foo'
+        id: 'foo',
       });
     });
 
@@ -88,7 +88,7 @@ describe('action creators', () => {
         type: actionTypes.send,
         event: { type: 'foo' },
         delay: undefined,
-        id: 'foo-id'
+        id: 'foo-id',
       });
     });
 
@@ -99,7 +99,7 @@ describe('action creators', () => {
         type: actionTypes.send,
         event: { type: 'foo' },
         delay: 1000,
-        id: 'foo'
+        id: 'foo',
       });
     });
 
@@ -108,7 +108,7 @@ describe('action creators', () => {
         { delay: number },
         { type: 'EVENT'; value: number } | { type: 'RECEIVED' }
       >('RECEIVED', {
-        delay: (ctx, e) => ctx.delay + ('value' in e ? e.value : 0)
+        delay: (ctx, e) => ctx.delay + ('value' in e ? e.value : 0),
       });
 
       const resolvedAction = actions.resolveSend(
@@ -117,7 +117,7 @@ describe('action creators', () => {
         toSCXMLEvent({ type: 'EVENT', value: 50 } as {
           type: 'EVENT';
           value: number;
-        })
+        }),
       );
 
       expect(resolvedAction.delay).toEqual(150);

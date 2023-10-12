@@ -10,16 +10,16 @@ export const machine: AnyStateMachine = Machine({
         foo: {
           id: 'A_foo',
           on: {
-            NEXT: '#A_bar'
-          }
+            NEXT: '#A_bar',
+          },
         },
         bar: {
           id: 'A_bar',
           on: {
-            NEXT: '#B_foo'
-          }
-        }
-      }
+            NEXT: '#B_foo',
+          },
+        },
+      },
     },
     B: {
       id: 'B',
@@ -29,19 +29,19 @@ export const machine: AnyStateMachine = Machine({
           id: 'B_foo',
           on: {
             NEXT: '#B_bar',
-            NEXT_DOT: '#B.dot'
-          }
+            NEXT_DOT: '#B.dot',
+          },
         },
         bar: {
           id: 'B_bar',
           on: {
-            NEXT: '#A_foo'
-          }
+            NEXT: '#A_foo',
+          },
         },
         dot_custom: {
-          id: 'B.dot'
-        }
-      }
+          id: 'B.dot',
+        },
+      },
     },
     getter: {
       on: {
@@ -54,16 +54,16 @@ export const machine: AnyStateMachine = Machine({
         NEXT_TARGET: {
           get target() {
             return machine.states.B;
-          }
+          },
         },
         NEXT_TARGET_ARRAY: [
           {
             get target() {
               return machine.states.B;
-            }
-          }
-        ]
-      }
-    }
-  }
+            },
+          },
+        ],
+      },
+    },
+  },
 });

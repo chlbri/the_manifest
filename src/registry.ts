@@ -24,5 +24,5 @@ export const registry: Registry = {
   },
   free(id) {
     children.delete(id);
-  }
+  },
 };

@@ -4,7 +4,7 @@ const omniMachine = Machine({
   id: 'omni',
   initial: 'compound',
   context: {
-    count: 0
+    count: 0,
   },
   states: {
     compound: {
@@ -22,24 +22,24 @@ const omniMachine = Machine({
                 one: {},
                 two: {},
                 three: {
-                  type: 'final'
-                }
-              }
+                  type: 'final',
+                },
+              },
             },
             second: {
-              type: 'final'
+              type: 'final',
             },
             shallowHist: {
               type: 'history',
-              history: 'shallow'
+              history: 'shallow',
             },
             deepHist: {
               type: 'history',
-              history: 'deep'
-            }
-          }
-        }
-      }
+              history: 'deep',
+            },
+          },
+        },
+      },
     },
     parallel: {
       type: 'parallel',
@@ -49,57 +49,57 @@ const omniMachine = Machine({
           states: {
             one: {},
             two: {},
-            three: { type: 'final' }
-          }
+            three: { type: 'final' },
+          },
         },
         middle: {
           type: 'compound',
           states: {
             one: {
               after: {
-                1000: 'two'
-              }
+                1000: 'two',
+              },
             },
             two: {
               after: {
                 2000: [
-                  { target: 'three', cond: (ctx) => ctx.count === 3 },
-                  { target: 'four', cond: (ctx) => ctx.count === 4 },
-                  { target: 'one' }
-                ]
-              }
+                  { target: 'three', cond: ctx => ctx.count === 3 },
+                  { target: 'four', cond: ctx => ctx.count === 4 },
+                  { target: 'one' },
+                ],
+              },
             },
             three: {
               after: {
-                1000: [{ target: 'one', cond: (ctx) => ctx.count === -1 }],
-                2000: 'four'
-              }
+                1000: [{ target: 'one', cond: ctx => ctx.count === -1 }],
+                2000: 'four',
+              },
             },
-            four: { type: 'final' }
-          }
+            four: { type: 'final' },
+          },
         },
         right: {
           type: 'compound',
           states: {
             transient: {
-              always: 'one'
+              always: 'one',
             },
             transientCond: {
               always: [
-                { target: 'two', cond: (ctx) => ctx.count === 2 },
-                { target: 'three', cond: (ctx) => ctx.count === 3 },
-                { target: 'one' }
-              ]
+                { target: 'two', cond: ctx => ctx.count === 2 },
+                { target: 'three', cond: ctx => ctx.count === 3 },
+                { target: 'one' },
+              ],
             },
             one: {},
             two: {},
             three: {},
-            four: { type: 'final' }
-          }
-        }
-      }
-    }
-  }
+            four: { type: 'final' },
+          },
+        },
+      },
+    },
+  },
 });
 
 export { omniMachine };

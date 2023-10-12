@@ -18,12 +18,12 @@ describe('document order', () => {
                 five: {
                   initial: 'six',
                   states: {
-                    six: {}
-                  }
-                }
-              }
-            }
-          }
+                    six: {},
+                  },
+                },
+              },
+            },
+          },
         },
         seven: {
           type: 'parallel',
@@ -36,33 +36,35 @@ describe('document order', () => {
                   initial: 'eleven',
                   states: {
                     eleven: {},
-                    twelve: {}
-                  }
-                }
-              }
+                    twelve: {},
+                  },
+                },
+              },
             },
             thirteen: {
               type: 'parallel',
               states: {
                 fourteen: {},
-                fifteen: {}
-              }
-            }
-          }
-        }
-      }
+                fifteen: {},
+              },
+            },
+          },
+        },
+      },
     });
 
     function dfs(
-      node: AnyStateMachine
+      node: AnyStateMachine,
     ): StateNode<any, any, any, any, any, any>[] {
       return flatten([
         node as any,
-        ...Object.keys(node.states).map((key) => dfs(node.states[key] as any))
+        ...Object.keys(node.states).map(key =>
+          dfs(node.states[key] as any),
+        ),
       ]);
     }
 
-    const allStateNodeOrders = dfs(machine).map((sn) => [sn.key, sn.order]);
+    const allStateNodeOrders = dfs(machine).map(sn => [sn.key, sn.order]);
 
     expect(allStateNodeOrders).toEqual([
       ['order', 0],
@@ -80,7 +82,7 @@ describe('document order', () => {
       ['twelve', 12],
       ['thirteen', 13],
       ['fourteen', 14],
-      ['fifteen', 15]
+      ['fifteen', 15],
     ]);
   });
 });

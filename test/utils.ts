@@ -2,13 +2,13 @@ import {
   AnyState,
   AnyStateMachine,
   matchesState,
-  StateValue
+  StateValue,
 } from '../src/index';
 
 export function testMultiTransition(
   machine: AnyStateMachine,
   fromState: string,
-  eventTypes: string
+  eventTypes: string,
 ): AnyState {
   const computeNext = (state: AnyState | string, eventType: string) => {
     if (typeof state === 'string' && state[0] === '{') {
@@ -22,7 +22,7 @@ export function testMultiTransition(
 
   const resultState = restEvents.reduce<AnyState>(
     computeNext,
-    computeNext(fromState, firstEventType)
+    computeNext(fromState, firstEventType),
   );
 
   return resultState;
@@ -30,16 +30,20 @@ export function testMultiTransition(
 
 export function testAll(
   machine: AnyStateMachine,
-  expected: Record<string, Record<string, StateValue | undefined>>
+  expected: Record<string, Record<string, StateValue | undefined>>,
 ): void {
-  Object.keys(expected).forEach((fromState) => {
-    Object.keys(expected[fromState]).forEach((eventTypes) => {
+  Object.keys(expected).forEach(fromState => {
+    Object.keys(expected[fromState]).forEach(eventTypes => {
       const toState = expected[fromState][eventTypes];
 
       it(`should go from ${fromState} to ${JSON.stringify(
-        toState
+        toState,
       )} on ${eventTypes}`, () => {
-        const resultState = testMultiTransition(machine, fromState, eventTypes);
+        const resultState = testMultiTransition(
+          machine,
+          fromState,
+          eventTypes,
+        );
 
         if (toState === undefined) {
           // undefined means that the state didn't transition

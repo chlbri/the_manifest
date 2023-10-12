@@ -5,9 +5,9 @@ describe('mapState()', () => {
     const mapping = mapState(
       {
         a: 'state a',
-        b: 'state b'
+        b: 'state b',
       },
-      'b'
+      'b',
     );
 
     expect(mapping).toBe('state b');
@@ -17,9 +17,9 @@ describe('mapState()', () => {
     const mapping = mapState(
       {
         a: 'state a',
-        b: 'state b'
+        b: 'state b',
       },
-      'c'
+      'c',
     );
 
     expect(mapping).not.toBeDefined();
@@ -30,9 +30,9 @@ describe('mapState()', () => {
       {
         a: 'state a',
         b: 'state b',
-        'b.b1': 'st b.b1'
+        'b.b1': 'st b.b1',
       },
-      'b.b1'
+      'b.b1',
     );
 
     expect(mapping).toBe('st b.b1');
@@ -43,9 +43,9 @@ describe('mapState()', () => {
       {
         a: 'state a',
         b: 'state b',
-        'b.b1': 'st b.b1'
+        'b.b1': 'st b.b1',
       },
-      'b.foo'
+      'b.foo',
     );
 
     expect(mapping).toBe('state b');
@@ -56,9 +56,9 @@ describe('mapState()', () => {
       {
         a: 'state a',
         b: 'state b',
-        'b.b1': 'state b.b1'
+        'b.b1': 'state b.b1',
       },
-      'b.b1.foo'
+      'b.b1.foo',
     );
 
     expect(mapping).toBe('state b.b1');

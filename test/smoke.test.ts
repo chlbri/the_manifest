@@ -7,23 +7,23 @@ describe('smoke test', () => {
         id: 'light',
         initial: 'green',
         context: {
-          canTurnGreen: true
+          canTurnGreen: true,
         },
         states: {
           green: {
             after: {
-              1000: 'yellow'
-            }
+              1000: 'yellow',
+            },
           },
           yellow: {
             after: {
-              1000: [{ target: 'red' }]
-            }
+              1000: [{ target: 'red' }],
+            },
           },
           red: {
-            after: [{ delay: 1000, target: 'green' }]
-          }
-        }
+            after: [{ delay: 1000, target: 'green' }],
+          },
+        },
       });
     }).not.toThrow();
   });

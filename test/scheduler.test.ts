@@ -63,7 +63,7 @@ describe('scheduler', () => {
       scheduler.schedule(() => {
         calledCount++;
         throw Error('Test');
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(`"Test"`);
     scheduler.schedule(() => {
       calledCount++;
@@ -84,7 +84,7 @@ describe('scheduler', () => {
           calledCount++;
           throw Error('Test');
         });
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(`"Test"`);
     scheduler.schedule(() => {
       calledCount++;
@@ -108,7 +108,7 @@ describe('scheduler', () => {
         scheduler.schedule(() => {
           calledCount++;
         });
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(`"Test"`);
 
     const expectedCount = 2;
@@ -129,7 +129,7 @@ describe('scheduler', () => {
         scheduler.schedule(() => {
           calledCount++;
         });
-      })
+      }),
     ).toThrowErrorMatchingInlineSnapshot(`"Test"`);
     scheduler.schedule(() => {
       calledCount++;
@@ -143,7 +143,7 @@ describe('scheduler', () => {
     it('should be able to defer events', () => {
       let calledCount = 0;
       const scheduler = new Scheduler({
-        deferEvents: true
+        deferEvents: true,
       });
       scheduler.schedule(() => {
         calledCount++;
@@ -159,7 +159,7 @@ describe('scheduler', () => {
     it('should process initialization before other events', () => {
       const callOrder: number[] = [];
       const scheduler = new Scheduler({
-        deferEvents: true
+        deferEvents: true,
       });
       scheduler.schedule(() => {
         callOrder.push(2);
@@ -180,7 +180,7 @@ describe('scheduler', () => {
 
     it('should not defer events after initialization', () => {
       const scheduler = new Scheduler({
-        deferEvents: true
+        deferEvents: true,
       });
       scheduler.initialize(); // TODO: refactor (use .start())
       let calledCount = 0;

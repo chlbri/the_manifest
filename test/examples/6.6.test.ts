@@ -7,29 +7,29 @@ describe('Example 6.6', () => {
     states: {
       A: {
         on: {
-          3: 'B'
+          3: 'B',
         },
         initial: 'D',
         states: {
           C: {
             on: {
-              2: '#B'
-            }
+              2: '#B',
+            },
           },
           D: {
             on: {
-              1: 'C'
-            }
-          }
-        }
+              1: 'C',
+            },
+          },
+        },
       },
       B: {
         id: 'B',
         on: {
-          4: 'A.D'
-        }
-      }
-    }
+          4: 'A.D',
+        },
+      },
+    },
   });
 
   const expected = {
@@ -37,26 +37,26 @@ describe('Example 6.6', () => {
       1: 'A.C',
       2: 'A.D',
       3: 'B',
-      4: 'A.D'
+      4: 'A.D',
     },
     B: {
       1: 'B',
       2: 'B',
       3: 'B',
-      4: 'A.D'
+      4: 'A.D',
     },
     'A.C': {
       1: 'A.C',
       2: 'B',
       3: 'B',
-      4: 'A.C'
+      4: 'A.C',
     },
     'A.D': {
       1: 'A.C',
       2: 'A.D',
       3: 'B',
-      4: 'A.D'
-    }
+      4: 'A.D',
+    },
   };
 
   testAll(machine, expected);

@@ -23,61 +23,61 @@ describe('guard conditions', () => {
             TIMER: [
               {
                 target: 'green',
-                cond: ({ elapsed }) => elapsed < 100
+                cond: ({ elapsed }) => elapsed < 100,
               },
               {
                 target: 'yellow',
-                cond: ({ elapsed }) => elapsed >= 100 && elapsed < 200
-              }
+                cond: ({ elapsed }) => elapsed >= 100 && elapsed < 200,
+              },
             ],
             EMERGENCY: {
               target: 'red',
-              cond: (_, event) => !!event.isEmergency
-            }
-          }
+              cond: (_, event) => !!event.isEmergency,
+            },
+          },
         },
         yellow: {
           on: {
             TIMER: {
               target: 'red',
-              cond: 'minTimeElapsed'
+              cond: 'minTimeElapsed',
             },
             TIMER_COND_OBJ: {
               target: 'red',
               cond: {
-                type: 'minTimeElapsed'
-              }
-            }
-          }
+                type: 'minTimeElapsed',
+              },
+            },
+          },
         },
         red: {
           on: {
             BAD_COND: {
               target: 'red',
-              cond: 'doesNotExist'
-            }
-          }
-        }
-      }
+              cond: 'doesNotExist',
+            },
+          },
+        },
+      },
     },
     {
       guards: {
-        minTimeElapsed: ({ elapsed }) => elapsed >= 100 && elapsed < 200
-      }
-    }
+        minTimeElapsed: ({ elapsed }) => elapsed >= 100 && elapsed < 200,
+      },
+    },
   );
 
   it('should transition only if condition is met', () => {
     expect(
       lightMachine.transition('green', 'TIMER', {
-        elapsed: 50
-      }).value
+        elapsed: 50,
+      }).value,
     ).toEqual('green');
 
     expect(
       lightMachine.transition('green', 'TIMER', {
-        elapsed: 120
-      }).value
+        elapsed: 120,
+      }).value,
     ).toEqual('yellow');
   });
 
@@ -85,22 +85,22 @@ describe('guard conditions', () => {
     expect(
       lightMachine.transition('green', {
         type: 'EMERGENCY',
-        isEmergency: true
-      }).value
+        isEmergency: true,
+      }).value,
     ).toEqual('red');
   });
 
   it('should not transition if condition based on event is not met', () => {
     expect(
       lightMachine.transition('green', {
-        type: 'EMERGENCY'
-      }).value
+        type: 'EMERGENCY',
+      }).value,
     ).toEqual('green');
   });
 
   it('should not transition if no condition is met', () => {
     const nextState = lightMachine.transition('green', 'TIMER', {
-      elapsed: 9000
+      elapsed: 9000,
     });
     expect(nextState.value).toEqual('green');
     expect(nextState.actions).toEqual([]);
@@ -108,21 +108,21 @@ describe('guard conditions', () => {
 
   it('should work with defined string transitions', () => {
     const nextState = lightMachine.transition('yellow', 'TIMER', {
-      elapsed: 150
+      elapsed: 150,
     });
     expect(nextState.value).toEqual('red');
   });
 
   it('should work with guard objects', () => {
     const nextState = lightMachine.transition('yellow', 'TIMER_COND_OBJ', {
-      elapsed: 150
+      elapsed: 150,
     });
     expect(nextState.value).toEqual('red');
   });
 
   it('should work with defined string transitions (condition not met)', () => {
     const nextState = lightMachine.transition('yellow', 'TIMER', {
-      elapsed: 10
+      elapsed: 10,
     });
     expect(nextState.value).toEqual('yellow');
   });
@@ -142,27 +142,27 @@ describe('guard conditions', () => {
         states: {
           A0: {
             on: {
-              A: 'A1'
-            }
+              A: 'A1',
+            },
           },
           A1: {
             on: {
-              A: 'A2'
-            }
+              A: 'A2',
+            },
           },
           A2: {
             on: {
-              A: 'A3'
-            }
+              A: 'A3',
+            },
           },
           A3: {
-            always: 'A4'
+            always: 'A4',
           },
           A4: {
-            always: 'A5'
+            always: 'A5',
           },
-          A5: {}
-        }
+          A5: {},
+        },
       },
       B: {
         initial: 'B0',
@@ -171,60 +171,60 @@ describe('guard conditions', () => {
             always: [
               {
                 target: 'B4',
-                cond: (_state, _event, { state: s }) => s.matches('A.A4')
-              }
+                cond: (_state, _event, { state: s }) => s.matches('A.A4'),
+              },
             ],
             on: {
               T1: [
                 {
                   target: 'B1',
                   cond: (_state: any, _event: any, { state: s }: any) =>
-                    s.matches('A.A1')
-                }
+                    s.matches('A.A1'),
+                },
               ],
               T2: [
                 {
                   target: 'B2',
                   cond: (_state: any, _event: any, { state: s }: any) =>
-                    s.matches('A.A2')
-                }
+                    s.matches('A.A2'),
+                },
               ],
               T3: [
                 {
                   target: 'B3',
                   cond: (_state: any, _event: any, { state: s }: any) =>
-                    s.matches('A.A3')
-                }
-              ]
-            }
+                    s.matches('A.A3'),
+                },
+              ],
+            },
           },
           B1: {},
           B2: {},
           B3: {},
-          B4: {}
-        }
-      }
-    }
+          B4: {},
+        },
+      },
+    },
   });
 
   it('should guard against transition', () => {
     expect(machine.transition({ A: 'A2', B: 'B0' }, 'T1').value).toEqual({
       A: 'A2',
-      B: 'B0'
+      B: 'B0',
     });
   });
 
   it('should allow a matching transition', () => {
     expect(machine.transition({ A: 'A2', B: 'B0' }, 'T2').value).toEqual({
       A: 'A2',
-      B: 'B2'
+      B: 'B2',
     });
   });
 
   it('should check guards with interim states', () => {
     expect(machine.transition({ A: 'A2', B: 'B0' }, 'A').value).toEqual({
       A: 'A5',
-      B: 'B4'
+      B: 'B4',
     });
   });
 
@@ -234,8 +234,8 @@ describe('guard conditions', () => {
       states: {
         a: {
           on: {
-            MACRO: 'b'
-          }
+            MACRO: 'b',
+          },
         },
         b: {
           entry: actions.raise('MICRO'),
@@ -244,12 +244,12 @@ describe('guard conditions', () => {
             MICRO: {
               cond: (_ctx: any, _event: any, { state }: any) =>
                 state.hasTag('theTag'),
-              target: 'c'
-            }
-          }
+              target: 'c',
+            },
+          },
         },
-        c: {}
-      }
+        c: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -267,7 +267,7 @@ describe('custom guards', () => {
       id: 'custom',
       initial: 'inactive',
       context: {
-        count: 0
+        count: 0,
       },
       states: {
         inactive: {
@@ -278,13 +278,13 @@ describe('custom guards', () => {
                 type: 'custom',
                 prop: 'count',
                 op: 'greaterThan',
-                compare: 3
-              }
-            }
-          }
+                compare: 3,
+              },
+            },
+          },
         },
-        active: {}
-      }
+        active: {},
+      },
     },
     {
       guards: {
@@ -295,22 +295,22 @@ describe('custom guards', () => {
           }
 
           return false;
-        }
-      }
-    }
+        },
+      },
+    },
   );
 
   it('should evaluate custom guards', () => {
     const passState = machine.transition(machine.initialState, {
       type: 'EVENT',
-      value: 4
+      value: 4,
     });
 
     expect(passState.value).toEqual('active');
 
     const failState = machine.transition(machine.initialState, {
       type: 'EVENT',
-      value: 3
+      value: 3,
     });
 
     expect(failState.value).toEqual('inactive');
@@ -331,28 +331,29 @@ describe('referencing guards', () => {
               {
                 cond: function guardFn() {
                   return true;
-                }
+                },
               },
               {
                 cond: {
                   type: 'object',
-                  foo: 'bar'
-                }
-              }
-            ]
-          }
-        }
-      }
+                  foo: 'bar',
+                },
+              },
+            ],
+          },
+        },
+      },
     },
     {
       guards: {
-        string: stringGuardFn
-      }
-    }
+        string: stringGuardFn,
+      },
+    },
   );
 
   const def = guardsMachine.definition;
-  const [stringGuard, functionGuard, objectGuard] = def.states.active.on.EVENT;
+  const [stringGuard, functionGuard, objectGuard] =
+    def.states.active.on.EVENT;
 
   it('guard predicates should be able to be referenced from a string', () => {
     expect(stringGuard.cond!.predicate).toBeDefined();
@@ -368,7 +369,7 @@ describe('referencing guards', () => {
     expect(objectGuard.cond).toBeDefined();
     expect(objectGuard.cond).toEqual({
       type: 'object',
-      foo: 'bar'
+      foo: 'bar',
     });
   });
 
@@ -379,11 +380,11 @@ describe('referencing guards', () => {
       states: {
         active: {
           on: {
-            EVENT: { target: 'inactive', cond: 'missing-predicate' }
-          }
+            EVENT: { target: 'inactive', cond: 'missing-predicate' },
+          },
         },
-        inactive: {}
-      }
+        inactive: {},
+      },
     });
 
     expect(() => {
@@ -399,12 +400,12 @@ describe('guards - other', () => {
       states: {
         a: {
           on: {
-            EVENT: [{ target: 'b', cond: () => false }, 'c']
-          }
+            EVENT: [{ target: 'b', cond: () => false }, 'c'],
+          },
         },
         b: {},
-        c: {}
-      }
+        c: {},
+      },
     });
 
     const service = interpret(machine).start();

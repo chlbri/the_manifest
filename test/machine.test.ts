@@ -82,7 +82,7 @@ const configMachine = Machine(
     guards: {
       someCondition: () => false,
     },
-  }
+  },
 );
 
 describe('machine', () => {
@@ -120,7 +120,7 @@ describe('machine', () => {
     it('should not retain previous history', () => {
       const next = lightMachine.transition(
         lightMachine.initialState,
-        'TIMER'
+        'TIMER',
       );
       const following = lightMachine.transition(next, 'TIMER');
       expect(following!.history!.history).not.toBeDefined();
@@ -148,13 +148,13 @@ describe('machine', () => {
       const deepState = machine.getStateNodeByPath(['one', 'deep']);
 
       expect(deepState.config).toBe(
-        machine.config.states!.one.states!.deep
+        machine.config.states!.one.states!.deep,
       );
 
       deepState.config.meta = 'testing meta';
 
       expect(machine.config.states!.one.states!.deep.meta).toEqual(
-        'testing meta'
+        'testing meta',
       );
     });
   });
@@ -175,11 +175,11 @@ describe('machine', () => {
       const service = interpret(differentMachine);
 
       expect(() => service.start()).toThrowErrorMatchingInlineSnapshot(
-        `"new entry"`
+        `"new entry"`,
       );
 
       expect(differentMachine.transition('foo', 'EVENT').value).toEqual(
-        'bar'
+        'bar',
       );
     });
 
@@ -187,14 +187,14 @@ describe('machine', () => {
       const differentMachine = configMachine.withConfig({});
 
       expect(differentMachine.initialState.context).toEqual(
-        configMachine.context
+        configMachine.context,
       );
     });
 
     it('should override context (second argument)', () => {
       const differentMachine = configMachine.withConfig(
         {},
-        { foo: 'different' }
+        { foo: 'different' },
       );
 
       expect(differentMachine.initialState.context).toEqual({
@@ -246,7 +246,7 @@ describe('machine', () => {
       const testMachine2 = Machine(testMachineConfig);
 
       expect(testMachine1.initialState.context).not.toBe(
-        testMachine2.initialState.context
+        testMachine2.initialState.context,
       );
 
       expect(testMachine1.initialState.context).toEqual({
@@ -357,11 +357,11 @@ describe('machine', () => {
       const jsonBarState = JSON.parse(JSON.stringify(barState));
 
       expect(
-        machine.resolveState(jsonBarState).matches('bar')
+        machine.resolveState(jsonBarState).matches('bar'),
       ).toBeTruthy();
     });
 
-    it('should terminate on a resolved final state', (done) => {
+    it('should terminate on a resolved final state', done => {
       const machine = createMachine({
         initial: 'foo',
         states: {
@@ -474,7 +474,7 @@ describe('machine', () => {
       });
 
       expect(noStateNodeIDMachine.getStateNode('idle').id).toEqual(
-        'some-id.idle'
+        'some-id.idle',
       );
     });
   });
@@ -485,7 +485,7 @@ describe('machine', () => {
         context: { value: 42 },
         on: {
           INC: {
-            actions: assign({ value: (ctx) => ctx.value + 1 }),
+            actions: assign({ value: ctx => ctx.value + 1 }),
           },
         },
       });
@@ -507,7 +507,7 @@ describe('StateNode', () => {
 
     const transitions = greenNode.transitions;
 
-    expect(transitions.map((t) => t.eventType)).toEqual([
+    expect(transitions.map(t => t.eventType)).toEqual([
       'TIMER',
       'POWER_OUTAGE',
       'FORBIDDEN_EVENT',

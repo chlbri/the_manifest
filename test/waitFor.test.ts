@@ -18,7 +18,7 @@ describe('waitFor', () => {
 
     setTimeout(() => service.send('NEXT'), 10);
 
-    const state = await waitFor(service, (s) => s.matches('b'));
+    const state = await waitFor(service, s => s.matches('b'));
 
     expect(state.value).toEqual('b');
   });
@@ -40,7 +40,7 @@ describe('waitFor', () => {
     const service = interpret(machine).start();
 
     try {
-      await waitFor(service, (state) => state.matches('c'), {
+      await waitFor(service, state => state.matches('c'), {
         timeout: 10,
       });
     } catch (e) {
@@ -63,10 +63,10 @@ describe('waitFor', () => {
     });
     const service = interpret(machine).start();
     const result = await Promise.race([
-      waitFor(service, (state) => state.matches('c'), {
+      waitFor(service, state => state.matches('c'), {
         timeout: Infinity,
       }),
-      new Promise((res) => setTimeout(res, 10)).then(() => 'timeout'),
+      new Promise(res => setTimeout(res, 10)).then(() => 'timeout'),
     ]);
 
     expect(result).toBe('timeout');
@@ -93,9 +93,9 @@ describe('waitFor', () => {
     }, 10);
 
     await expect(
-      waitFor(service, (state) => state.matches('never'))
+      waitFor(service, state => state.matches('never')),
     ).rejects.toMatchInlineSnapshot(
-      `[Error: Actor terminated without satisfying predicate]`
+      `[Error: Actor terminated without satisfying predicate]`,
     );
   });
 
@@ -110,7 +110,7 @@ describe('waitFor', () => {
     const service = interpret(machine).start();
 
     await expect(
-      waitFor(service, (state) => state.matches('a'))
+      waitFor(service, state => state.matches('a')),
     ).resolves.toHaveProperty('value', 'a');
   });
 
@@ -130,7 +130,7 @@ describe('waitFor', () => {
 
     const service = interpret(machine).start();
 
-    await waitFor(service, (state) => {
+    await waitFor(service, state => {
       count++;
       return state.matches('a');
     });
@@ -158,7 +158,7 @@ describe('waitFor', () => {
     const service = interpret(machine).start();
 
     expect(
-      waitFor(service, (state) => state.matches('b'))
+      waitFor(service, state => state.matches('b')),
     ).resolves.toHaveProperty('value', 'b');
     service.send({ type: 'NEXT' });
   });
@@ -182,9 +182,9 @@ describe('waitFor', () => {
 
     service.send({ type: 'NEXT' });
     await expect(
-      waitFor(service, (state) => state.matches('a'))
+      waitFor(service, state => state.matches('a')),
     ).rejects.toMatchInlineSnapshot(
-      `[Error: Actor terminated without satisfying predicate]`
+      `[Error: Actor terminated without satisfying predicate]`,
     );
   });
 });

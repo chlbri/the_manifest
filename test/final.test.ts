@@ -6,8 +6,8 @@ const finalMachine = Machine({
   states: {
     green: {
       on: {
-        TIMER: 'yellow'
-      }
+        TIMER: 'yellow',
+      },
     },
     yellow: { on: { TIMER: 'red' } },
     red: {
@@ -17,52 +17,52 @@ const finalMachine = Machine({
           initial: 'walk',
           states: {
             walk: {
-              on: { PED_WAIT: 'wait' }
+              on: { PED_WAIT: 'wait' },
             },
             wait: {
-              on: { PED_STOP: 'stop' }
+              on: { PED_STOP: 'stop' },
             },
             stop: {
               type: 'final',
-              data: { signal: 'stop' }
-            }
+              data: { signal: 'stop' },
+            },
           },
           onDone: {
             cond: (_, e) => e.data.signal === 'stop',
-            actions: 'stopCrosswalk1'
-          }
+            actions: 'stopCrosswalk1',
+          },
         },
         crosswalk2: {
           initial: 'walk',
           states: {
             walk: {
-              on: { PED_WAIT: 'wait' }
+              on: { PED_WAIT: 'wait' },
             },
             wait: {
-              on: { PED_STOP: 'stop' }
+              on: { PED_STOP: 'stop' },
             },
             stop: {
-              on: { PED_STOP: 'stop2' }
+              on: { PED_STOP: 'stop2' },
             },
             stop2: {
-              type: 'final'
-            }
+              type: 'final',
+            },
           },
           onDone: {
-            actions: 'stopCrosswalk2'
-          }
-        }
+            actions: 'stopCrosswalk2',
+          },
+        },
       },
       onDone: {
         target: 'green',
-        actions: 'prepareGreenLight'
-      }
-    }
+        actions: 'prepareGreenLight',
+      },
+    },
   },
   onDone: {
     // this action should never occur because final states are not direct children of machine
-    actions: 'shouldNeverOccur'
-  }
+    actions: 'shouldNeverOccur',
+  },
 });
 
 describe('final states', () => {
@@ -71,33 +71,33 @@ describe('final states', () => {
     expect(redState.value).toEqual({
       red: {
         crosswalk1: 'walk',
-        crosswalk2: 'walk'
-      }
+        crosswalk2: 'walk',
+      },
     });
     const waitState = finalMachine.transition(redState, 'PED_WAIT');
     expect(waitState.value).toEqual({
       red: {
         crosswalk1: 'wait',
-        crosswalk2: 'wait'
-      }
+        crosswalk2: 'wait',
+      },
     });
     const stopState = finalMachine.transition(waitState, 'PED_STOP');
     expect(stopState.value).toEqual({
       red: {
         crosswalk1: 'stop',
-        crosswalk2: 'stop'
-      }
+        crosswalk2: 'stop',
+      },
     });
 
     expect(stopState.actions).toEqual([
-      { type: 'stopCrosswalk1', exec: undefined }
+      { type: 'stopCrosswalk1', exec: undefined },
     ]);
 
     const stopState2 = finalMachine.transition(stopState, 'PED_STOP');
 
     expect(stopState2.actions).toEqual([
       { type: 'stopCrosswalk2', exec: undefined },
-      { type: 'prepareGreenLight', exec: undefined }
+      { type: 'prepareGreenLight', exec: undefined },
     ]);
 
     const greenState = finalMachine.transition(stopState, 'TIMER');
@@ -119,29 +119,29 @@ describe('final states', () => {
               states: {
                 baz: {
                   type: 'final',
-                  onEntry: 'bazAction'
-                }
-              }
+                  onEntry: 'bazAction',
+                },
+              },
             },
             barFinal: {
               type: 'final',
-              onDone: { actions: 'barAction' }
-            }
-          }
-        }
-      }
+              onDone: { actions: 'barAction' },
+            },
+          },
+        },
+      },
     });
 
     const { initialState } = nestedFinalMachine;
 
-    expect(initialState.actions.map((a) => a.type)).toEqual([
+    expect(initialState.actions.map(a => a.type)).toEqual([
       'bazAction',
       'barAction',
-      'fooAction'
+      'fooAction',
     ]);
   });
 
-  it('should call data expressions on nested final nodes', (done) => {
+  it('should call data expressions on nested final nodes', done => {
     interface Ctx {
       revealedSecret?: string;
     }
@@ -149,7 +149,7 @@ describe('final states', () => {
     const machine = Machine<Ctx>({
       initial: 'secret',
       context: {
-        revealedSecret: undefined
+        revealedSecret: undefined,
       },
       states: {
         secret: {
@@ -157,35 +157,35 @@ describe('final states', () => {
           states: {
             wait: {
               on: {
-                REQUEST_SECRET: 'reveal'
-              }
+                REQUEST_SECRET: 'reveal',
+              },
             },
             reveal: {
               type: 'final',
               data: {
-                secret: () => 'the secret'
-              }
-            }
+                secret: () => 'the secret',
+              },
+            },
           },
           onDone: {
             target: 'success',
             actions: assign<Ctx, AnyEventObject>({
               revealedSecret: (_, event) => {
                 return event.data.secret;
-              }
-            })
-          }
+              },
+            }),
+          },
         },
         success: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     let _context: any;
 
     const service = interpret(machine)
-      .onTransition((state) => (_context = state.context))
+      .onTransition(state => (_context = state.context))
       .onDone(() => {
         expect(_context).toEqual({ revealedSecret: 'the secret' });
         done();
@@ -202,14 +202,14 @@ describe('final states', () => {
       states: {
         start: {
           on: {
-            FINISH: 'end'
-          }
+            FINISH: 'end',
+          },
         },
         end: {
           type: 'final',
-          data: spy
-        }
-      }
+          data: spy,
+        },
+      },
     });
 
     const service = interpret(machine).start();

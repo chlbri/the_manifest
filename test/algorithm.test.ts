@@ -19,10 +19,10 @@ const testMachine = Machine({
               initial: 'e1',
               states: {
                 e1: { id: 'e1' },
-                e2: { id: 'e2' }
-              }
-            }
-          }
+                e2: { id: 'e2' },
+              },
+            },
+          },
         },
         c2: { id: 'c2' },
         c3: {
@@ -35,19 +35,19 @@ const testMachine = Machine({
               initial: 'e3',
               states: {
                 e3: { id: 'e3' },
-                e4: { id: 'e4' }
-              }
-            }
-          }
-        }
-      }
+                e4: { id: 'e4' },
+              },
+            },
+          },
+        },
+      },
     },
     b2: {
       id: 'b2',
       initial: 'c4',
       states: {
-        c4: { id: 'c4' }
-      }
+        c4: { id: 'c4' },
+      },
     },
     b3: {
       id: 'b3',
@@ -60,12 +60,12 @@ const testMachine = Machine({
           states: {
             d5: { id: 'd5' },
             d6: { id: 'd6' },
-            d7: { id: 'd7' }
-          }
-        }
-      }
-    }
-  }
+            d7: { id: 'd7' },
+          },
+        },
+      },
+    },
+  },
 });
 
 describe('algorithm', () => {
@@ -74,14 +74,14 @@ describe('algorithm', () => {
       b1: {
         c1: 'd1',
         c2: {},
-        c3: 'd3'
-      }
+        c3: 'd3',
+      },
     });
-    const nodes = ['c1', 'd4'].map((id) => testMachine.getStateNodeById(id));
+    const nodes = ['c1', 'd4'].map(id => testMachine.getStateNodeById(id));
 
     const c = getConfiguration(prevNodes, nodes);
 
-    expect([...c].map((sn) => sn.id).sort()).toEqual([
+    expect([...c].map(sn => sn.id).sort()).toEqual([
       'a',
       'b1',
       'c1',
@@ -89,7 +89,7 @@ describe('algorithm', () => {
       'c3',
       'd1',
       'd4',
-      'e3'
+      'e3',
     ]);
   });
 });

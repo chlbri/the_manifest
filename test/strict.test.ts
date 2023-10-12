@@ -6,24 +6,24 @@ describe('strict mode', () => {
     states: {
       walk: {
         on: {
-          PED_COUNTDOWN: 'wait'
+          PED_COUNTDOWN: 'wait',
         },
         onEntry: 'enter_walk',
-        onExit: 'exit_walk'
+        onExit: 'exit_walk',
       },
       wait: {
         on: {
-          PED_COUNTDOWN: 'stop'
+          PED_COUNTDOWN: 'stop',
         },
         onEntry: 'enter_wait',
-        onExit: 'exit_wait'
+        onExit: 'exit_wait',
       },
       stop: {
         type: 'final' as const,
         onEntry: 'enter_stop',
-        onExit: 'exit_stop'
-      }
-    }
+        onExit: 'exit_stop',
+      },
+    },
   };
 
   const lightMachine = Machine({
@@ -35,30 +35,30 @@ describe('strict mode', () => {
         on: {
           TIMER: 'yellow',
           POWER_OUTAGE: 'red',
-          NOTHING: 'green'
+          NOTHING: 'green',
         },
         onEntry: 'enter_green',
-        onExit: 'exit_green'
+        onExit: 'exit_green',
       },
       yellow: {
         on: {
           TIMER: 'red',
-          POWER_OUTAGE: 'red'
+          POWER_OUTAGE: 'red',
         },
         onEntry: 'enter_yellow',
-        onExit: 'exit_yellow'
+        onExit: 'exit_yellow',
       },
       red: {
         on: {
           TIMER: 'green',
           POWER_OUTAGE: 'red',
-          NOTHING: 'red'
+          NOTHING: 'red',
         },
         onEntry: 'enter_red',
         onExit: 'exit_red',
-        ...pedestrianStates
-      }
-    }
+        ...pedestrianStates,
+      },
+    },
   });
 
   it('should throw for unacceptable events', () => {

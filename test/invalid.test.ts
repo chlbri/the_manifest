@@ -7,28 +7,31 @@ const machine = Machine({
       initial: 'A1',
       states: {
         A1: {},
-        A2: {}
-      }
+        A2: {},
+      },
     },
     B: {
       initial: 'B1',
       states: {
         B1: {},
-        B2: {}
-      }
-    }
-  }
+        B2: {},
+      },
+    },
+  },
 });
 
 describe('invalid or resolved states', () => {
   it('should resolve a String state', () => {
-    expect(machine.transition('A', 'E').value).toEqual({ A: 'A1', B: 'B1' });
+    expect(machine.transition('A', 'E').value).toEqual({
+      A: 'A1',
+      B: 'B1',
+    });
   });
 
   it('should resolve transitions from empty states', () => {
     expect(machine.transition({ A: {}, B: {} }, 'E').value).toEqual({
       A: 'A1',
-      B: 'B1'
+      B: 'B1',
     });
   });
 
@@ -43,16 +46,16 @@ describe('invalid or resolved states', () => {
   it('should resolve transitioning from partially valid states', () => {
     expect(machine.transition({ A: 'A1', B: {} }, 'E').value).toEqual({
       A: 'A1',
-      B: 'B1'
+      B: 'B1',
     });
   });
 
   it("should resolve transitioning from regions that don't exist (remove region)", () => {
     expect(
-      machine.transition({ A: 'A1', B: 'B1', Z: 'Z1' }, 'E').value
+      machine.transition({ A: 'A1', B: 'B1', Z: 'Z1' }, 'E').value,
     ).toEqual({
       A: 'A1',
-      B: 'B1'
+      B: 'B1',
     });
   });
 });

@@ -8,12 +8,12 @@ describe('event descriptors', () => {
         A: {
           on: {
             FOO: 'B',
-            '*': 'C'
-          }
+            '*': 'C',
+          },
         },
         B: {},
-        C: {}
-      }
+        C: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -28,12 +28,12 @@ describe('event descriptors', () => {
         A: {
           on: {
             '*': 'fail',
-            NEXT: 'pass'
-          }
+            NEXT: 'pass',
+          },
         },
         fail: {},
-        pass: {}
-      }
+        pass: {},
+      },
     });
 
     const service = interpret(machine).start();
@@ -48,12 +48,12 @@ describe('event descriptors', () => {
         A: {
           on: [
             { event: '*', target: 'pass' },
-            { event: 'NEXT', target: 'fail' }
-          ]
+            { event: 'NEXT', target: 'fail' },
+          ],
         },
         fail: {},
-        pass: {}
-      }
+        pass: {},
+      },
     });
 
     const service = interpret(machine).start();

@@ -10,26 +10,26 @@ describe('Example 6.17', () => {
           1: 'Y',
           2: 'Y.A.C', // 6.18
           // 3: { Y: { A: 'C', B: 'F' } } // 6.19
-          4: 'Y.A.hist'
-        }
+          4: 'Y.A.hist',
+        },
       },
       Y: {
         type: 'parallel',
         states: {
           A: {
             initial: 'D',
-            states: { C: {}, D: {}, E: {}, hist: { history: true } }
+            states: { C: {}, D: {}, E: {}, hist: { history: true } },
           },
           B: {
             initial: 'G',
-            states: { F: {}, G: {}, H: {} }
-          }
+            states: { F: {}, G: {}, H: {} },
+          },
         },
         on: {
-          back: 'X'
-        }
-      }
-    }
+          back: 'X',
+        },
+      },
+    },
   });
 
   const expected: Record<string, Record<string, StateValue>> = {
@@ -37,27 +37,31 @@ describe('Example 6.17', () => {
       1: { Y: { A: 'D', B: 'G' } },
       2: { Y: { A: 'C', B: 'G' } }, // 6.18
       // 3: { Y: { A: 'C', B: 'F' } }, //  6.19
-      '2, back, 4': { Y: { A: 'C', B: 'G' } }
+      '2, back, 4': { Y: { A: 'C', B: 'G' } },
     },
     '{"Y":{"A":"C","B":"G"}}': {
-      back: 'X'
+      back: 'X',
     },
     'Y.A.C': {
-      back: 'X'
+      back: 'X',
     },
     'Y.B.G': {
-      back: 'X'
-    }
+      back: 'X',
+    },
   };
 
-  Object.keys(expected).forEach((fromState) => {
-    Object.keys(expected[fromState]).forEach((eventTypes) => {
+  Object.keys(expected).forEach(fromState => {
+    Object.keys(expected[fromState]).forEach(eventTypes => {
       const toState = expected[fromState][eventTypes];
 
       it(`should go from ${fromState} to ${JSON.stringify(
-        toState
+        toState,
       )} on ${eventTypes}`, () => {
-        const resultState = testMultiTransition(machine, fromState, eventTypes);
+        const resultState = testMultiTransition(
+          machine,
+          fromState,
+          eventTypes,
+        );
 
         expect(resultState.value).toEqual(toState);
       });
@@ -75,8 +79,8 @@ describe('Jump to ID', () => {
           1: 'Y',
           2: 'Y.A.C', // 6.18
           // 3: { Y: { A: 'C', B: 'F' } } // 6.19
-          4: 'Y.A.hist'
-        }
+          4: 'Y.A.hist',
+        },
       },
       Y: {
         type: 'parallel',
@@ -86,43 +90,47 @@ describe('Jump to ID', () => {
             states: {
               C: {
                 on: {
-                  finish: '#X'
-                }
+                  finish: '#X',
+                },
               },
               D: {},
               E: {},
-              hist: { history: true }
-            }
+              hist: { history: true },
+            },
           },
           B: {
             initial: 'G',
-            states: { F: {}, G: {}, H: {} }
-          }
+            states: { F: {}, G: {}, H: {} },
+          },
         },
         on: {
-          kill: '#X'
-        }
-      }
-    }
+          kill: '#X',
+        },
+      },
+    },
   });
 
   const expected: Record<string, Record<string, string>> = {
     'Y.B.G': {
-      kill: 'X'
+      kill: 'X',
     },
     '{"Y":{"A":"C","B":"H"}}': {
-      finish: 'X'
-    }
+      finish: 'X',
+    },
   };
 
-  Object.keys(expected).forEach((fromState) => {
-    Object.keys(expected[fromState]).forEach((eventTypes) => {
+  Object.keys(expected).forEach(fromState => {
+    Object.keys(expected[fromState]).forEach(eventTypes => {
       const toState = expected[fromState][eventTypes];
 
       it(`should go from ${fromState} to ${JSON.stringify(
-        toState
+        toState,
       )} on ${eventTypes}`, () => {
-        const resultState = testMultiTransition(machine, fromState, eventTypes);
+        const resultState = testMultiTransition(
+          machine,
+          fromState,
+          eventTypes,
+        );
 
         expect(resultState.value).toEqual(toState);
       });

@@ -7,8 +7,8 @@ describe('definition', () => {
       invoke: [{ src: 'foo' }, { src: 'bar' }],
       initial: 'idle',
       states: {
-        idle: {}
-      }
+        idle: {},
+      },
     });
 
     expect(invokeMachine.definition.invoke.length).toBe(2);

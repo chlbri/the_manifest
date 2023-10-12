@@ -8,59 +8,59 @@ describe('Example: CD Player', () => {
     states: {
       not_loaded: {
         on: {
-          INSERT_CD: 'loaded'
-        }
+          INSERT_CD: 'loaded',
+        },
       },
       loaded: {
         initial: 'stopped',
 
         on: {
-          EJECT: 'not_loaded'
+          EJECT: 'not_loaded',
         },
         states: {
           stopped: {
             on: {
-              PLAY: 'playing'
-            }
+              PLAY: 'playing',
+            },
           },
           playing: {
             on: {
               STOP: 'stopped',
               EXPIRED_END: 'stopped',
               EXPIRED_MID: 'playing',
-              PAUSE: 'paused'
-            }
+              PAUSE: 'paused',
+            },
           },
           paused: {
             initial: 'not_blank',
             states: {
               blank: { on: { TIMER: 'not_blank' } },
-              not_blank: { on: { TIMER: 'blank' } }
+              not_blank: { on: { TIMER: 'blank' } },
             },
             on: {
               PAUSE: 'playing',
               PLAY: 'playing',
-              STOP: 'stopped'
-            }
-          }
-        }
-      }
-    }
+              STOP: 'stopped',
+            },
+          },
+        },
+      },
+    },
   });
 
   const expected = {
     not_loaded: {
       INSERT_CD: 'loaded.stopped',
-      FAKE: undefined
+      FAKE: undefined,
     },
     loaded: {
       EJECT: 'not_loaded',
-      FAKE: undefined
+      FAKE: undefined,
     },
     'loaded.stopped': {
       PLAY: 'loaded.playing',
       EJECT: 'not_loaded',
-      FAKE: undefined
+      FAKE: undefined,
     },
     'loaded.playing': {
       EXPIRED_MID: 'loaded.playing',
@@ -68,22 +68,22 @@ describe('Example: CD Player', () => {
       STOP: 'loaded.stopped',
       EJECT: 'not_loaded',
       PAUSE: 'loaded.paused.not_blank',
-      FAKE: undefined
+      FAKE: undefined,
     },
     'loaded.paused': {
       PAUSE: 'loaded.playing',
       PLAY: 'loaded.playing',
       TIMER: 'loaded.paused.blank',
       EJECT: 'not_loaded',
-      STOP: 'loaded.stopped'
+      STOP: 'loaded.stopped',
     },
     'loaded.paused.blank': {
       PAUSE: 'loaded.playing',
       PLAY: 'loaded.playing',
       TIMER: 'loaded.paused.not_blank',
       EJECT: 'not_loaded',
-      STOP: 'loaded.stopped'
-    }
+      STOP: 'loaded.stopped',
+    },
   };
 
   testAll(machine, expected);

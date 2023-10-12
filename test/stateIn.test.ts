@@ -10,20 +10,20 @@ const machine = Machine({
           on: {
             EVENT1: {
               target: 'a2',
-              in: 'b.b2'
+              in: 'b.b2',
             },
             EVENT2: {
               target: 'a2',
-              in: { b: 'b2' }
+              in: { b: 'b2' },
             },
             EVENT3: {
               target: 'a2',
-              in: '#b_b2'
-            }
-          }
+              in: '#b_b2',
+            },
+          },
         },
-        a2: {}
-      }
+        a2: {},
+      },
     },
     b: {
       initial: 'b1',
@@ -32,9 +32,9 @@ const machine = Machine({
           on: {
             EVENT: {
               target: 'b2',
-              in: 'a.a2'
-            }
-          }
+              in: 'a.a2',
+            },
+          },
         },
         b2: {
           id: 'b_b2',
@@ -45,24 +45,24 @@ const machine = Machine({
               states: {
                 foo1: {
                   on: {
-                    EVENT_DEEP: { target: 'foo2', in: 'bar.bar1' }
-                  }
+                    EVENT_DEEP: { target: 'foo2', in: 'bar.bar1' },
+                  },
                 },
-                foo2: {}
-              }
+                foo2: {},
+              },
             },
             bar: {
               initial: 'bar1',
               states: {
                 bar1: {},
-                bar2: {}
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                bar2: {},
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 const lightMachine = Machine({
@@ -76,18 +76,18 @@ const lightMachine = Machine({
       states: {
         walk: {},
         wait: {},
-        stop: {}
+        stop: {},
       },
       on: {
         TIMER: [
           {
             target: 'green',
-            in: { red: 'stop' }
-          }
-        ]
-      }
-    }
-  }
+            in: { red: 'stop' },
+          },
+        ],
+      },
+    },
+  },
 });
 
 describe('transition "in" check', () => {
@@ -99,20 +99,20 @@ describe('transition "in" check', () => {
           b: {
             b2: {
               foo: 'foo2',
-              bar: 'bar1'
-            }
-          }
+              bar: 'bar1',
+            },
+          },
         },
-        'EVENT1'
-      ).value
+        'EVENT1',
+      ).value,
     ).toEqual({
       a: 'a2',
       b: {
         b2: {
           foo: 'foo2',
-          bar: 'bar1'
-        }
-      }
+          bar: 'bar1',
+        },
+      },
     });
   });
 
@@ -124,27 +124,29 @@ describe('transition "in" check', () => {
           b: {
             b2: {
               foo: 'foo2',
-              bar: 'bar1'
-            }
-          }
+              bar: 'bar1',
+            },
+          },
         },
-        'EVENT3'
-      ).value
+        'EVENT3',
+      ).value,
     ).toEqual({
       a: 'a2',
       b: {
         b2: {
           foo: 'foo2',
-          bar: 'bar1'
-        }
-      }
+          bar: 'bar1',
+        },
+      },
     });
   });
 
   it('should not transition if string state path does not match current state value', () => {
-    expect(machine.transition({ a: 'a1', b: 'b1' }, 'EVENT1').value).toEqual({
+    expect(
+      machine.transition({ a: 'a1', b: 'b1' }, 'EVENT1').value,
+    ).toEqual({
       a: 'a1',
-      b: 'b1'
+      b: 'b1',
     });
   });
 
@@ -156,20 +158,20 @@ describe('transition "in" check', () => {
           b: {
             b2: {
               foo: 'foo2',
-              bar: 'bar1'
-            }
-          }
+              bar: 'bar1',
+            },
+          },
         },
-        'EVENT2'
-      ).value
+        'EVENT2',
+      ).value,
     ).toEqual({
       a: 'a2',
       b: {
         b2: {
           foo: 'foo2',
-          bar: 'bar1'
-        }
-      }
+          bar: 'bar1',
+        },
+      },
     });
   });
 
@@ -177,16 +179,16 @@ describe('transition "in" check', () => {
     expect(
       machine.transition(
         { a: 'a1', b: { b2: { foo: 'foo1', bar: 'bar1' } } },
-        'EVENT_DEEP'
-      ).value
+        'EVENT_DEEP',
+      ).value,
     ).toEqual({
       a: 'a1',
       b: {
         b2: {
           foo: 'foo2',
-          bar: 'bar1'
-        }
-      }
+          bar: 'bar1',
+        },
+      },
     });
   });
 
@@ -194,16 +196,16 @@ describe('transition "in" check', () => {
     expect(
       machine.transition(
         { a: 'a1', b: { b2: { foo: 'foo1', bar: 'bar2' } } },
-        'EVENT_DEEP'
-      ).value
+        'EVENT_DEEP',
+      ).value,
     ).toEqual({
       a: 'a1',
       b: {
         b2: {
           foo: 'foo1',
-          bar: 'bar2'
-        }
-      }
+          bar: 'bar2',
+        },
+      },
     });
   });
 

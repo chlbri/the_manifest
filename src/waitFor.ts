@@ -38,7 +38,7 @@ const defaultWaitForOptions: WaitForOptions = {
 export function waitFor<TActorRef extends ActorRef<any, any>>(
   actorRef: TActorRef,
   predicate: (emitted: EmittedFrom<TActorRef>) => boolean,
-  options?: Partial<WaitForOptions>
+  options?: Partial<WaitForOptions>,
 ): Promise<EmittedFrom<TActorRef>> {
   const resolvedOptions: WaitForOptions = {
     ...defaultWaitForOptions,
@@ -51,7 +51,7 @@ export function waitFor<TActorRef extends ActorRef<any, any>>(
       resolvedOptions.timeout < 0
     ) {
       console.error(
-        '`timeout` passed to `waitFor` is negative and it will reject its internal promise immediately.'
+        '`timeout` passed to `waitFor` is negative and it will reject its internal promise immediately.',
       );
     }
     const handle =
@@ -61,8 +61,8 @@ export function waitFor<TActorRef extends ActorRef<any, any>>(
             sub.unsubscribe();
             rej(
               new Error(
-                `Timeout of ${resolvedOptions.timeout} ms exceeded`
-              )
+                `Timeout of ${resolvedOptions.timeout} ms exceeded`,
+              ),
             );
           }, resolvedOptions.timeout);
 
@@ -73,13 +73,13 @@ export function waitFor<TActorRef extends ActorRef<any, any>>(
     };
 
     const sub = actorRef.subscribe({
-      next: (emitted) => {
+      next: emitted => {
         if (predicate(emitted)) {
           dispose();
           res(emitted);
         }
       },
-      error: (err) => {
+      error: err => {
         dispose();
         rej(err);
       },

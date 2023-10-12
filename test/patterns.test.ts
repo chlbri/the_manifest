@@ -6,7 +6,7 @@ describe('patterns', () => {
     it('should produce a partial state machine with a binary toggle', () => {
       expect(toggle('on', 'off', 'SWITCH')).toEqual({
         on: { on: { SWITCH: 'off' } },
-        off: { on: { SWITCH: 'on' } }
+        off: { on: { SWITCH: 'on' } },
       });
     });
   });
@@ -17,18 +17,24 @@ describe('patterns', () => {
 
       const sequenceMachine = Machine({
         id: 'sequence',
-        ...sequence(seq)
+        ...sequence(seq),
       });
 
-      expect(sequenceMachine.transition(seq[0], 'NEXT').value).toEqual(seq[1]);
+      expect(sequenceMachine.transition(seq[0], 'NEXT').value).toEqual(
+        seq[1],
+      );
 
-      expect(sequenceMachine.transition(seq[1], 'PREV').value).toEqual(seq[0]);
+      expect(sequenceMachine.transition(seq[1], 'PREV').value).toEqual(
+        seq[0],
+      );
 
       expect(
-        sequenceMachine.transition(seq[seq.length - 1], 'NEXT').value
+        sequenceMachine.transition(seq[seq.length - 1], 'NEXT').value,
       ).toEqual(seq[seq.length - 1]);
 
-      expect(sequenceMachine.transition(seq[0], 'PREV').value).toEqual(seq[0]);
+      expect(sequenceMachine.transition(seq[0], 'PREV').value).toEqual(
+        seq[0],
+      );
     });
 
     it('should customize the next/prev events', () => {
@@ -38,19 +44,25 @@ describe('patterns', () => {
         id: 'sequence',
         ...sequence(seq, {
           nextEvent: 'FORWARD',
-          prevEvent: 'BACK'
-        })
+          prevEvent: 'BACK',
+        }),
       });
 
-      expect(sequenceMachine.transition(seq[0], 'NEXT').value).toEqual(seq[0]);
-
-      expect(sequenceMachine.transition(seq[1], 'PREV').value).toEqual(seq[1]);
-
-      expect(sequenceMachine.transition(seq[0], 'FORWARD').value).toEqual(
-        seq[1]
+      expect(sequenceMachine.transition(seq[0], 'NEXT').value).toEqual(
+        seq[0],
       );
 
-      expect(sequenceMachine.transition(seq[1], 'BACK').value).toEqual(seq[0]);
+      expect(sequenceMachine.transition(seq[1], 'PREV').value).toEqual(
+        seq[1],
+      );
+
+      expect(sequenceMachine.transition(seq[0], 'FORWARD').value).toEqual(
+        seq[1],
+      );
+
+      expect(sequenceMachine.transition(seq[1], 'BACK').value).toEqual(
+        seq[0],
+      );
     });
 
     it('should allow next/prev events to be undefined', () => {
@@ -60,30 +72,32 @@ describe('patterns', () => {
         id: 'sequence',
         ...sequence(seq, {
           nextEvent: 'FORWARD',
-          prevEvent: undefined
-        })
+          prevEvent: undefined,
+        }),
       });
 
       expect(sequenceMachine.transition(seq[0], 'FORWARD').value).toEqual(
-        seq[1]
+        seq[1],
       );
 
-      expect(sequenceMachine.transition(seq[1], 'BACK').value).toEqual(seq[1]);
+      expect(sequenceMachine.transition(seq[1], 'BACK').value).toEqual(
+        seq[1],
+      );
 
       const backSequenceMachine = Machine({
         id: 'backSequence',
         ...sequence(seq, {
           nextEvent: undefined,
-          prevEvent: 'BACK'
-        })
+          prevEvent: 'BACK',
+        }),
       });
 
-      expect(backSequenceMachine.transition(seq[0], 'FORWARD').value).toEqual(
-        seq[0]
-      );
+      expect(
+        backSequenceMachine.transition(seq[0], 'FORWARD').value,
+      ).toEqual(seq[0]);
 
       expect(backSequenceMachine.transition(seq[1], 'BACK').value).toEqual(
-        seq[0]
+        seq[0],
       );
     });
   });

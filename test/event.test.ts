@@ -2,14 +2,14 @@ import { Machine, sendParent, interpret, assign } from '../src';
 import { respond, send } from '../src/actions';
 
 describe('SCXML events', () => {
-  it('should have the origin (id) from the sending machine service', (done) => {
+  it('should have the origin (id) from the sending machine service', done => {
     const childMachine = Machine({
       initial: 'active',
       states: {
         active: {
-          entry: sendParent('EVENT')
-        }
-      }
+          entry: sendParent('EVENT'),
+        },
+      },
     });
 
     const parentMachine = Machine({
@@ -18,21 +18,21 @@ describe('SCXML events', () => {
         active: {
           invoke: {
             id: 'child',
-            src: childMachine
+            src: childMachine,
           },
           on: {
             EVENT: {
               target: 'success',
               cond: (_: any, __: any, { _event }: any) => {
                 return !!(_event.origin && _event.origin.length > 0);
-              }
-            }
-          }
+              },
+            },
+          },
         },
         success: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     interpret(parentMachine)
@@ -48,21 +48,21 @@ describe('SCXML events', () => {
         active: {
           invoke: {
             id: 'callback_child',
-            src: () => (send) => send({ type: 'EVENT' })
+            src: () => send => send({ type: 'EVENT' }),
           },
           on: {
             EVENT: {
               target: 'success',
               actions: assign({
-                childOrigin: (_, __, { _event }) => _event.origin
-              })
-            }
-          }
+                childOrigin: (_, __, { _event }) => _event.origin,
+              }),
+            },
+          },
         },
         success: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(machine).start();
@@ -70,7 +70,7 @@ describe('SCXML events', () => {
     expect(service.state.context.childOrigin).toBe('callback_child');
   });
 
-  it('respond() should be able to respond to sender', (done) => {
+  it('respond() should be able to respond to sender', done => {
     const authServerMachine = Machine({
       initial: 'waitingForCode',
       states: {
@@ -78,36 +78,36 @@ describe('SCXML events', () => {
           on: {
             CODE: {
               actions: respond('TOKEN', {
-                delay: 10
-              })
-            }
-          }
-        }
-      }
+                delay: 10,
+              }),
+            },
+          },
+        },
+      },
     });
 
     const authClientMachine = Machine({
       initial: 'idle',
       states: {
         idle: {
-          on: { AUTH: 'authorizing' }
+          on: { AUTH: 'authorizing' },
         },
         authorizing: {
           invoke: {
             id: 'auth-server',
-            src: authServerMachine
+            src: authServerMachine,
           },
           entry: send('CODE', {
-            to: 'auth-server'
+            to: 'auth-server',
           }),
           on: {
-            TOKEN: 'authorized'
-          }
+            TOKEN: 'authorized',
+          },
         },
         authorized: {
-          type: 'final'
-        }
-      }
+          type: 'final',
+        },
+      },
     });
 
     const service = interpret(authClientMachine)
@@ -141,36 +141,36 @@ const authMachine = Machine<SignInContext, ChangePassword>(
               // We want to assign the new password but remain in the hidden
               // state
               changePassword: {
-                actions: 'assignPassword'
-              }
-            }
+                actions: 'assignPassword',
+              },
+            },
           },
           valid: {},
-          invalid: {}
+          invalid: {},
         },
         on: {
           changePassword: [
             {
               cond: (_, event) => event.password.length >= 10,
               target: '.invalid',
-              actions: ['assignPassword']
+              actions: ['assignPassword'],
             },
             {
               target: '.valid',
-              actions: ['assignPassword']
-            }
-          ]
-        }
-      }
-    }
+              actions: ['assignPassword'],
+            },
+          ],
+        },
+      },
+    },
   },
   {
     actions: {
       assignPassword: assign<SignInContext, ChangePassword>({
-        password: (_, event) => event.password
-      })
-    }
-  }
+        password: (_, event) => event.password,
+      }),
+    },
+  },
 );
 
 describe('nested transitions', () => {
@@ -178,7 +178,7 @@ describe('nested transitions', () => {
     const password = 'xstate123';
     const state = authMachine.transition(authMachine.initialState, {
       type: 'changePassword',
-      password
+      password,
     });
 
     expect(state.value).toEqual({ passwordField: 'hidden' });

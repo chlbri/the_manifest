@@ -11,8 +11,8 @@ const greetingMachine = Machine<typeof greetingContext>({
     pending: {
       on: {
         '': [
-          { target: 'morning', cond: (ctx) => ctx.hour < 12 },
-          { target: 'afternoon', cond: (ctx) => ctx.hour < 18 },
+          { target: 'morning', cond: ctx => ctx.hour < 12 },
+          { target: 'afternoon', cond: ctx => ctx.hour < 18 },
           { target: 'evening' },
         ],
       },
@@ -58,7 +58,7 @@ describe('transient states (eventless transitions)', () => {
       'UPDATE_BUTTON_CLICKED',
       {
         data: false,
-      }
+      },
     );
     expect(nextState.value).toEqual('D');
   });
@@ -70,7 +70,7 @@ describe('transient states (eventless transitions)', () => {
       {
         data: true,
         status: 'Y',
-      }
+      },
     );
     expect(nextState.value).toEqual('B');
   });
@@ -82,7 +82,7 @@ describe('transient states (eventless transitions)', () => {
       {
         data: true,
         status: 'X',
-      }
+      },
     );
     expect(nextState.value).toEqual('C');
   });
@@ -94,7 +94,7 @@ describe('transient states (eventless transitions)', () => {
       {
         data: true,
         status: 'other',
-      }
+      },
     );
     expect(nextState.value).toEqual('F');
   });
@@ -125,7 +125,7 @@ describe('transient states (eventless transitions)', () => {
 
     const state = machine.transition('A', 'TIMER');
 
-    expect(state.actions.map((a) => a.type)).toEqual([
+    expect(state.actions.map(a => a.type)).toEqual([
       'exit_A',
       'timer',
       'enter_B',
@@ -424,12 +424,12 @@ describe('transient states (eventless transitions)', () => {
     expect(morningState.value).toEqual('morning');
     const stillMorningState = greetingMachine.transition(
       morningState,
-      'CHANGE'
+      'CHANGE',
     );
     expect(stillMorningState.value).toEqual('morning');
     const eveningState = greetingMachine.transition(
       stillMorningState,
-      'RECHECK'
+      'RECHECK',
     );
     expect(eveningState.value).toEqual('evening');
   });
@@ -572,7 +572,7 @@ describe('transient states (eventless transitions)', () => {
     expect(state.value).toBe('pass');
   });
 
-  it('should work with transient transition on root', (done) => {
+  it('should work with transient transition on root', done => {
     const machine = createMachine<any, any, any>({
       id: 'machine',
       initial: 'first',
@@ -581,7 +581,7 @@ describe('transient states (eventless transitions)', () => {
         first: {
           on: {
             ADD: {
-              actions: assign({ count: (ctx) => ctx.count + 1 }),
+              actions: assign({ count: ctx => ctx.count + 1 }),
             },
           },
         },
@@ -593,7 +593,7 @@ describe('transient states (eventless transitions)', () => {
         '': [
           {
             target: '.success',
-            cond: (ctx) => {
+            cond: ctx => {
               return ctx.count > 0;
             },
           },
@@ -610,7 +610,7 @@ describe('transient states (eventless transitions)', () => {
     service.send('ADD');
   });
 
-  it('should work with transient transition on root (with `always`)', (done) => {
+  it('should work with transient transition on root (with `always`)', done => {
     const machine = createMachine<any, any, any>({
       id: 'machine',
       initial: 'first',
@@ -619,7 +619,7 @@ describe('transient states (eventless transitions)', () => {
         first: {
           on: {
             ADD: {
-              actions: assign({ count: (ctx) => ctx.count + 1 }),
+              actions: assign({ count: ctx => ctx.count + 1 }),
             },
           },
         },
@@ -631,7 +631,7 @@ describe('transient states (eventless transitions)', () => {
       always: [
         {
           target: '.success',
-          cond: (ctx) => {
+          cond: ctx => {
             return ctx.count > 0;
           },
         },
@@ -655,7 +655,7 @@ describe('transient states (eventless transitions)', () => {
           always: [
             {
               target: `finished`,
-              cond: (ctx) => ctx.duration < 1000,
+              cond: ctx => ctx.duration < 1000,
             },
             {
               target: `active`,

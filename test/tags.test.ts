@@ -6,18 +6,18 @@ describe('tags', () => {
       initial: 'green',
       states: {
         green: {
-          tags: ['go']
+          tags: ['go'],
         },
         yellow: {
           tags: ['go'],
           on: {
-            TIMER: 'red'
-          }
+            TIMER: 'red',
+          },
         },
         red: {
-          tags: ['stop']
-        }
-      }
+          tags: ['stop'],
+        },
+      },
     });
 
     expect(machine.initialState.hasTag('go')).toBeTruthy();
@@ -29,7 +29,7 @@ describe('tags', () => {
       initial: 'red',
       states: {
         green: {
-          tags: ['go']
+          tags: ['go'],
         },
         yellow: {},
         red: {
@@ -37,14 +37,14 @@ describe('tags', () => {
           initial: 'walk',
           states: {
             walk: {
-              tags: ['crosswalkLight']
+              tags: ['crosswalkLight'],
             },
             wait: {
-              tags: ['crosswalkLight']
-            }
-          }
-        }
-      }
+              tags: ['crosswalkLight'],
+            },
+          },
+        },
+      },
     });
 
     expect(machine.initialState.hasTag('go')).toBeFalsy();
@@ -60,12 +60,12 @@ describe('tags', () => {
           initial: 'active',
           states: {
             active: {
-              tags: 'yes'
+              tags: 'yes',
             },
             inactive: {
-              tags: 'no'
-            }
-          }
+              tags: 'no',
+            },
+          },
         },
         bar: {
           initial: 'active',
@@ -73,15 +73,15 @@ describe('tags', () => {
             active: {
               tags: 'yes',
               on: {
-                DEACTIVATE: 'inactive'
-              }
+                DEACTIVATE: 'inactive',
+              },
             },
             inactive: {
-              tags: 'no'
-            }
-          }
-        }
-      }
+              tags: 'no',
+            },
+          },
+        },
+      },
     });
 
     let state = machine.initialState;
@@ -96,13 +96,13 @@ describe('tags', () => {
       initial: 'a',
       states: {
         a: {
-          tags: 'myTag'
-        }
-      }
+          tags: 'myTag',
+        },
+      },
     });
 
     const state = machine.transition(machine.initialState, {
-      type: 'UNMATCHED'
+      type: 'UNMATCHED',
     });
     expect(state.hasTag('myTag')).toBeTruthy();
   });
@@ -112,9 +112,9 @@ describe('tags', () => {
       initial: 'green',
       states: {
         green: {
-          tags: 'go'
-        }
-      }
+          tags: 'go',
+        },
+      },
     });
 
     expect(machine.initialState.hasTag('go')).toBeTruthy();
@@ -125,9 +125,9 @@ describe('tags', () => {
       initial: 'green',
       states: {
         green: {
-          tags: ['go', 'light']
-        }
-      }
+          tags: ['go', 'light'],
+        },
+      },
     });
 
     const jsonState = machine.initialState.toJSON();
